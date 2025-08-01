@@ -61,7 +61,7 @@ export class DataSyncService {
     try {
       // Fetch current MEPs from EU API
       const mepsResponse = await euParliamentAPI.fetchCurrentMEPs();
-      const mepsData = mepsResponse['data'] || mepsResponse['@graph'] || [];
+      const mepsData = mepsResponse['@graph'] || [];
       
       console.log(`Found ${mepsData.length} current MEPs`);
       
@@ -131,7 +131,7 @@ export class DataSyncService {
     try {
       // Fetch corporate bodies from EU API (includes committees)
       const bodiesResponse = await euParliamentAPI.fetchCorporateBodies();
-      const bodiesData = bodiesResponse['data'] || bodiesResponse['@graph'] || [];
+      const bodiesData = bodiesResponse['@graph'] || [];
       
       console.log(`Found ${bodiesData.length} corporate bodies`);
       
@@ -210,7 +210,7 @@ export class DataSyncService {
         now.toISOString().split('T')[0],
         futureDate.toISOString().split('T')[0]
       );
-      const eventsData = eventsResponse['data'] || eventsResponse['@graph'] || [];
+      const eventsData = eventsResponse['@graph'] || [];
       
       console.log(`Found ${eventsData.length} upcoming events`);
       
@@ -289,7 +289,7 @@ export class DataSyncService {
     try {
       // Get committees with members from EU Parliament API
       const committeeResponse = await euParliamentAPI.fetchCommitteesWithMembers();
-      const committeesBodies = committeeResponse['data'] || committeeResponse['@graph'] || [];
+      const committeesBodies = committeeResponse['@graph'] || [];
       
       console.log(`Found ${committeesBodies.length} corporate bodies`);
       
@@ -319,6 +319,8 @@ export class DataSyncService {
               const chairId = euParliamentAPI.extractId(chair['@id'] || '');
               const chairName = chair['foaf:name'] || '';
               
+              if (!chairId && !chairName) continue;
+              
               // Find MEP by ID or name
               const mep = await this.findMEPByIdOrName(chairId, chairName);
               if (mep) {
@@ -343,6 +345,8 @@ export class DataSyncService {
               const memberId = euParliamentAPI.extractId(member['@id'] || '');
               const memberName = member['foaf:name'] || '';
               const roleLabel = member['ep:role']?.[0]?.['skos:prefLabel']?.['en'] || 'member';
+              
+              if (!memberId && !memberName) continue;
               
               // Find MEP by ID or name
               const mep = await this.findMEPByIdOrName(memberId, memberName);
@@ -423,7 +427,7 @@ export class DataSyncService {
       console.log('Testing EU Parliament API connection...');
       const response = await euParliamentAPI.fetchCurrentMEPs();
       
-      const data = response['data'] || response['@graph'];
+      const data = response['@graph'];
       if (response && data && Array.isArray(data)) {
         console.log(`API test successful. Found ${data.length} MEPs`);
         return true;

@@ -1,13 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { OptimizedStorage } from "./storage/optimized";
-import { dataSyncService } from "./services/dataSync";
-import { exportService } from "./services/exportService";
-import { apiCache } from "./utils/cache";
+import { OptimizedStorage } from "../storage/optimized";
+import { dataSyncService } from "../services/dataSync";
+import { exportService } from "../services/exportService";
+import { apiCache } from "../utils/cache";
+import { DatabaseOptimizer } from "../utils/database";
 import { z } from "zod";
 
-// Use optimized storage by default
 const optimizedStorage = new OptimizedStorage();
 
 const searchFiltersSchema = z.object({
@@ -19,9 +18,27 @@ const searchFiltersSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(50)
 });
 
-export async function registerRoutes(app: Express): Promise<Server> {
+/**
+ * Optimized routes with caching, error handling, and performance improvements
+ */
+export async function registerOptimizedRoutes(app: Express): Promise<Server> {
   
-  // Dashboard stats with caching
+  // Initialize database optimizations
+  await DatabaseOptimizer.createOptimizationIndexes();
+  await DatabaseOptimizer.analyzeTableStatistics();
+  
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      cache: {
+        size: (apiCache as any).cache.size
+      }
+    });
+  });
+
+  // Dashboard endpoints with caching
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
       const stats = await optimizedStorage.getDashboardStats();
@@ -32,7 +49,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Recent changes with caching
   app.get("/api/dashboard/recent-changes", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
@@ -44,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // MEPs endpoints
+  // Optimized MEPs endpoints
   app.get("/api/meps", async (req, res) => {
     try {
       const filters = searchFiltersSchema.parse(req.query);
@@ -85,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Committees endpoints
+  // Optimized Committees endpoints
   app.get("/api/committees", async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -136,9 +152,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Export endpoints
+  // Export endpoints with rate limiting
+  const exportRateLimit = new Map<string, number>();
+  const EXPORT_RATE_LIMIT = 60000; // 1 minute between exports per IP
+
+  function checkExportRateLimit(ip: string): boolean {
+    const lastExport = exportRateLimit.get(ip);
+    const now = Date.now();
+    
+    if (lastExport && (now - lastExport) < EXPORT_RATE_LIMIT) {
+      return false;
+    }
+    
+    exportRateLimit.set(ip, now);
+    return true;
+  }
+
   app.get("/api/export/meps/csv", async (req, res) => {
     try {
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+      
+      if (!checkExportRateLimit(clientIP)) {
+        return res.status(429).json({ 
+          error: "Rate limit exceeded. Please wait before requesting another export." 
+        });
+      }
+
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
       
@@ -156,6 +195,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/export/meps/json", async (req, res) => {
     try {
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+      
+      if (!checkExportRateLimit(clientIP)) {
+        return res.status(429).json({ 
+          error: "Rate limit exceeded. Please wait before requesting another export." 
+        });
+      }
+
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
       
@@ -173,6 +220,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/export/committees/csv", async (req, res) => {
     try {
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+      
+      if (!checkExportRateLimit(clientIP)) {
+        return res.status(429).json({ 
+          error: "Rate limit exceeded. Please wait before requesting another export." 
+        });
+      }
+
       const csvContent = await exportService.exportCommitteesToCSV();
       const filename = exportService.generateFilename('csv', 'committees');
       
@@ -185,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Data sync endpoints (for manual triggers and status)
+  // Data sync endpoints
   app.post("/api/sync/trigger", async (req, res) => {
     try {
       // Start sync in background
@@ -223,10 +278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Filter options endpoints
+  // Cached filter options endpoints
   app.get("/api/filters/countries", async (req, res) => {
     try {
-      // Use caching for filter options
       const cacheKey = 'filter_countries';
       let countries = apiCache.get<Array<{ code: string; name: string }>>(cacheKey);
       
@@ -281,6 +335,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching committees:", error);
       res.status(500).json({ error: "Failed to fetch committees" });
+    }
+  });
+
+  // Performance monitoring endpoint
+  app.get("/api/admin/performance", async (req, res) => {
+    try {
+      const metrics = await DatabaseOptimizer.getPerformanceMetrics();
+      res.json({
+        database: metrics,
+        cache: {
+          size: (apiCache as any).cache.size,
+          keys: Array.from((apiCache as any).cache.keys())
+        },
+        memory: process.memoryUsage()
+      });
+    } catch (error) {
+      console.error("Error fetching performance metrics:", error);
+      res.status(500).json({ error: "Failed to fetch performance metrics" });
+    }
+  });
+
+  // Cache management endpoint
+  app.post("/api/admin/cache/clear", (req, res) => {
+    try {
+      const { type } = req.body;
+      
+      if (type === 'all') {
+        apiCache.clear();
+      } else if (type && typeof type === 'string') {
+        const cache = (apiCache as any).cache as Map<string, any>;
+        for (const key of cache.keys()) {
+          if (key.includes(type)) {
+            apiCache.delete(key);
+          }
+        }
+      }
+      
+      res.json({ message: `Cache cleared successfully: ${type || 'all'}` });
+    } catch (error) {
+      console.error("Error clearing cache:", error);
+      res.status(500).json({ error: "Failed to clear cache" });
     }
   });
 
