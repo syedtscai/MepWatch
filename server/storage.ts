@@ -52,7 +52,12 @@ export interface IStorage {
   
   // MEP-Committee relationships
   addMEPToCommittee(mepCommittee: InsertMEPCommittee): Promise<MEPCommittee>;
+  createMEPCommittee(mepCommittee: InsertMEPCommittee): Promise<MEPCommittee>;
   removeMEPFromCommittee(mepId: string, committeeId: string): Promise<void>;
+  
+  // Bulk fetch methods
+  getAllMEPs(): Promise<MEP[]>;
+  getAllCommittees(): Promise<Committee[]>;
   
   // Data updates
   createDataUpdate(update: InsertDataUpdate): Promise<DataUpdate>;
@@ -381,6 +386,28 @@ export class DatabaseStorage implements IStorage {
       totalCountries: countryCount.count,
       lastUpdate: latestUpdate?.completedAt || null
     };
+  }
+
+  async getAllMEPs(): Promise<MEP[]> {
+    return await db
+      .select()
+      .from(meps)
+      .where(eq(meps.isActive, true));
+  }
+
+  async getAllCommittees(): Promise<Committee[]> {
+    return await db
+      .select()
+      .from(committees)
+      .where(eq(committees.isActive, true));
+  }
+
+  async createMEPCommittee(mepCommittee: InsertMEPCommittee): Promise<MEPCommittee> {
+    const [newMEPCommittee] = await db
+      .insert(mepCommittees)
+      .values(mepCommittee)
+      .returning();
+    return newMEPCommittee;
   }
 }
 

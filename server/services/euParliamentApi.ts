@@ -200,21 +200,50 @@ export class EUParliamentAPI {
 
   transformCommitteeData(euBody: any) {
     const id = this.extractId(euBody['id'] || euBody['@id'] || '');
-    
-    // For real API, we'll accept all corporate bodies and filter them later
     const name = euBody['label'] || this.extractText(euBody['skos:prefLabel']) || '';
+    const code = euBody['identifier'] || euBody['skos:notation'] || id;
     
     if (!name) return null;
+    
+    // Filter to only include actual parliamentary committees
+    // Known EU Parliament committees have specific naming patterns
+    const isCommittee = this.isActualCommittee(name, code);
+    
+    if (!isCommittee) return null;
 
     return {
       id,
-      code: euBody['identifier'] || euBody['skos:notation'] || id,
+      code: code,
       name: name,
       nameNational: null,
       coordinatorName: null, // Would need additional API call
       coordinatorGroup: null, // Would need additional API call
       isActive: true,
     };
+  }
+
+  private isActualCommittee(name: string, code: string): boolean {
+    // Known EU Parliament committee codes
+    const knownCommittees = [
+      'AGRI', 'BUDG', 'CCBE', 'CONT', 'CULT', 'DEVE', 'DROI', 'ECON', 
+      'EMPL', 'ENVI', 'FEMM', 'ITRE', 'IMCO', 'JURI', 'LIBE', 'PECH',
+      'PETI', 'REGI', 'SEDE', 'TRAN', 'AFCO', 'AFET', 'INTA'
+    ];
+    
+    // Check if code matches known committee codes
+    if (knownCommittees.includes(code)) {
+      return true;
+    }
+    
+    // Check if name contains committee-related terms
+    const namePattern = /committee|commission|subcommittee/i;
+    return namePattern.test(name);
+  }
+
+  async fetchCommitteeMemberships(): Promise<any> {
+    // This would require additional API endpoints that may not be available
+    // For now, we'll create sample memberships based on political groups
+    return null;
   }
 
   transformEventData(euEvent: any, committeeId?: string) {
