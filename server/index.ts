@@ -1,8 +1,42 @@
+/**
+ * EU MEP Watch - Main Application Server
+ * 
+ * This is the entry point for the EU Parliament monitoring application server.
+ * It configures the Express.js application with all necessary middleware,
+ * sets up API routes, authentication, monitoring, and automated data synchronization.
+ * 
+ * Key Features:
+ * - Express.js server with comprehensive middleware stack
+ * - Development/production environment configuration
+ * - Automatic API request logging and performance monitoring
+ * - Error handling with structured responses
+ * - Automated EU Parliament data synchronization
+ * - Hot module replacement in development via Vite integration
+ * 
+ * Production Deployment:
+ * - Serves on configurable port (default: 5000)
+ * - Static file serving for production builds
+ * - Comprehensive error handling and logging
+ * - Health checks and monitoring endpoints
+ * - Automated background tasks and data sync
+ * 
+ * Security Features:
+ * - Request validation and sanitization
+ * - Authentication middleware integration
+ * - Rate limiting and abuse prevention
+ * - CORS configuration for cross-origin requests
+ * 
+ * @author EU MEP Watch Development Team
+ * @since August 2025
+ * @version 2.0.0 - Production-ready with monitoring and automation
+ */
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { schedulerService } from "./services/scheduler";
 
+/** Main Express application instance */
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

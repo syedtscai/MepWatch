@@ -1,3 +1,45 @@
+/**
+ * EU MEP Watch - Main API Routes Configuration
+ * 
+ * This module defines all REST API endpoints for the EU Parliament monitoring application.
+ * It provides comprehensive access to MEP profiles, committee information, and real-time
+ * parliamentary data with built-in caching, rate limiting, and security middleware.
+ * 
+ * Key Features:
+ * - Authenticated API access with Replit OAuth integration
+ * - Intelligent caching layer for performance optimization
+ * - Rate limiting to prevent abuse and ensure fair usage
+ * - Comprehensive monitoring and logging for production operations
+ * - Data export capabilities (CSV, JSON) with usage controls
+ * 
+ * API Structure:
+ * - /api/auth/* - Authentication and user management
+ * - /api/dashboard/* - Dashboard statistics and recent changes
+ * - /api/meps/* - MEP profiles, search, and filtering
+ * - /api/committees/* - Committee information and membership
+ * - /api/filters/* - Data filtering options (countries, groups, etc.)
+ * - /api/export/* - Data export functionality with rate limiting
+ * - /api/sync/* - Manual data synchronization (admin only)
+ * - /api/monitoring/* - System monitoring and health checks
+ * 
+ * Performance Optimizations:
+ * - Database query optimization with proper indexing
+ * - Intelligent caching strategies (5-10 minute cache durations)
+ * - Batch loading and N+1 query elimination
+ * - Response compression and efficient data serialization
+ * 
+ * Security Features:
+ * - All endpoints require authentication except public landing page
+ * - Rate limiting per endpoint type (API: 100/min, exports: 5/5min)
+ * - Input validation using Zod schemas
+ * - SQL injection prevention through parameterized queries
+ * - Structured error handling without sensitive data leakage
+ * 
+ * @author EU MEP Watch Development Team
+ * @since August 2025
+ * @version 2.0.0 - Production with comprehensive monitoring
+ */
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -18,9 +60,14 @@ import { apiRateLimit, exportRateLimit, authRateLimit } from "./middleware/rateL
 import { monitoringRouter } from "./routes/monitoring";
 import { z } from "zod";
 
-// Use optimized storage by default
+/** Optimized storage instance for high-performance database operations */
 const optimizedStorage = new OptimizedStorage();
 
+/**
+ * Validation schema for MEP search and filtering parameters
+ * Ensures type safety and prevents malicious input while providing
+ * flexible search capabilities across multiple MEP attributes
+ */
 const searchFiltersSchema = z.object({
   search: z.string().optional(),
   country: z.string().optional(),
@@ -30,8 +77,26 @@ const searchFiltersSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(50)
 });
 
+/**
+ * Register all API routes and initialize monitoring services
+ * 
+ * This function sets up the complete API structure with authentication,
+ * monitoring, caching, and security middleware. It initializes all core
+ * services required for production operation including performance monitoring,
+ * data quality validation, and security auditing.
+ * 
+ * @param app Express application instance
+ * @returns HTTP server instance for external configuration
+ * 
+ * @example
+ * ```typescript
+ * const app = express();
+ * const server = await registerRoutes(app);
+ * server.listen(5000);
+ * ```
+ */
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize monitoring services
+  // Initialize monitoring services for production readiness
   // Note: Using console.log for startup messages is acceptable as logger may not be ready
   await monitoringService.startPerformanceMonitoring();
   await dataQualityService.startQualityMonitoring();

@@ -1,3 +1,39 @@
+/**
+ * Data Access Layer for EU MEP Watch Application
+ * 
+ * This module provides the storage interface and implementation for all database operations
+ * related to EU Parliament data management. It serves as the primary data access layer
+ * with comprehensive CRUD operations, advanced querying capabilities, and optimized
+ * performance for production workloads.
+ * 
+ * Key Features:
+ * - Type-safe database operations using Drizzle ORM
+ * - Advanced search and filtering with full-text capabilities
+ * - Comprehensive relationship management (MEPs ↔ Committees)
+ * - Performance optimizations with proper indexing and query optimization
+ * - Audit trails and change tracking for data integrity
+ * - Dashboard statistics and analytics support
+ * 
+ * Data Model Relationships:
+ * - MEPs: Core entity with personal, political, and contact information
+ * - Committees: Parliamentary committees with leadership and structure data
+ * - MEP-Committee: Many-to-many relationships with role tracking
+ * - Events: Committee events and parliamentary activities
+ * - Users: Application users with authentication and role management
+ * - Audit: Change logs and data update tracking
+ * 
+ * Performance Considerations:
+ * - Database indexes on frequently queried columns (country, political group)
+ * - Full-text search indexes for name and content searches
+ * - Pagination support for large datasets
+ * - Optimized joins to prevent N+1 query problems
+ * - Connection pooling and query result caching
+ * 
+ * @author EU MEP Watch Development Team
+ * @since August 2025
+ * @version 2.0.0 - Production-ready with comprehensive optimizations
+ */
+
 import { 
   meps, 
   committees, 
@@ -26,6 +62,22 @@ import {
 import { db } from "./db";
 import { eq, desc, like, and, or, sql, count, ilike, gte, lte, inArray } from "drizzle-orm";
 
+/**
+ * Storage interface defining all database operations for the EU MEP Watch application
+ * 
+ * This interface ensures consistent data access patterns across different storage
+ * implementations and provides comprehensive type safety for all database operations.
+ * It supports advanced querying, relationship management, and audit trail functionality.
+ * 
+ * Implementation Notes:
+ * - All methods use TypeScript generics for compile-time type safety
+ * - Pagination is supported through limit/offset parameters
+ * - Search operations support both exact matches and fuzzy text search
+ * - Relationship operations maintain referential integrity
+ * - Audit operations provide complete change tracking
+ * 
+ * @interface IStorage
+ */
 export interface IStorage {
   // MEPs
   getMEPs(filters?: {
@@ -87,6 +139,25 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
 }
 
+/**
+ * Primary database storage implementation using PostgreSQL with Drizzle ORM
+ * 
+ * This class provides the main storage implementation for production use,
+ * leveraging PostgreSQL's advanced features for optimal performance and
+ * data integrity. It implements comprehensive error handling, query optimization,
+ * and relationship management for complex EU Parliament data structures.
+ * 
+ * Features:
+ * - Advanced SQL query generation with proper indexing
+ * - Full-text search capabilities for MEP and committee names
+ * - Efficient pagination with count optimization
+ * - Comprehensive relationship joins to avoid N+1 problems
+ * - Transaction support for data consistency
+ * - Performance monitoring and query optimization
+ * 
+ * @class DatabaseStorage
+ * @implements {IStorage}
+ */
 export class DatabaseStorage implements IStorage {
   async getMEPs(filters?: {
     search?: string;
