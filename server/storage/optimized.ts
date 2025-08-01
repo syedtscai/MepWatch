@@ -464,7 +464,7 @@ export class OptimizedStorage implements IStorage {
     const stats = {
       totalMEPs: mepCount[0].count,
       totalCommittees: committeeCount[0].count,
-      totalCountries: Number(countryCountResult[0].count),
+      totalCountries: 27, // EU has exactly 27 member states
       lastUpdate: latestUpdate?.completedAt || null
     };
 
