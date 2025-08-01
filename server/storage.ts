@@ -21,7 +21,7 @@ import {
   type CommitteeWithMembers
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like, and, or, sql, count, ilike, gte, lte } from "drizzle-orm";
+import { eq, desc, like, and, or, sql, count, ilike, gte, lte, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // MEPs
@@ -198,38 +198,62 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getCommittees(limit = 50, offset = 0) {
-    const results = await db
+    // First get the committees with pagination
+    const committeesQuery = await db
       .select()
       .from(committees)
-      .leftJoin(mepCommittees, eq(committees.id, mepCommittees.committeeId))
-      .leftJoin(meps, eq(mepCommittees.mepId, meps.id))
       .where(eq(committees.isActive, true))
       .orderBy(committees.name)
       .limit(limit)
       .offset(offset);
     
+    // Get total count
+    const [{ count: total }] = await db
+      .select({ count: count() })
+      .from(committees)
+      .where(eq(committees.isActive, true));
+    
+    // If no committees found, return empty result
+    if (committeesQuery.length === 0) {
+      return {
+        committees: [],
+        total
+      };
+    }
+    
+    // Get the committee IDs for the current page
+    const committeeIds = committeesQuery.map(c => c.id);
+    
+    // Now get all MEP-committee relationships for these committees
+    const memberResults = await db
+      .select()
+      .from(committees)
+      .leftJoin(mepCommittees, eq(committees.id, mepCommittees.committeeId))
+      .leftJoin(meps, eq(mepCommittees.mepId, meps.id))
+      .where(and(
+        eq(committees.isActive, true),
+        inArray(committees.id, committeeIds)
+      ));
+    
     const committeeMap = new Map<string, CommitteeWithMembers>();
     
-    for (const row of results) {
-      if (!committeeMap.has(row.committees.id)) {
-        committeeMap.set(row.committees.id, {
-          ...row.committees,
-          members: []
-        });
-      }
-      
-      if (row.mep_committees && row.meps) {
+    // Initialize committees
+    for (const committee of committeesQuery) {
+      committeeMap.set(committee.id, {
+        ...committee,
+        members: []
+      });
+    }
+    
+    // Add members to committees
+    for (const row of memberResults) {
+      if (row.mep_committees && row.meps && committeeMap.has(row.committees.id)) {
         committeeMap.get(row.committees.id)!.members.push({
           ...row.mep_committees,
           mep: row.meps
         });
       }
     }
-    
-    const [{ count: total }] = await db
-      .select({ count: count() })
-      .from(committees)
-      .where(eq(committees.isActive, true));
     
     return {
       committees: Array.from(committeeMap.values()),
