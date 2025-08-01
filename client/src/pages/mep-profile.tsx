@@ -208,7 +208,7 @@ export default function MEPProfile() {
               <Separator />
               <div>
                 <p className="font-medium mb-2">MEP Since</p>
-                <p className="text-slate-gray">{new Date(mep.createdAt).getFullYear()}</p>
+                <p className="text-slate-gray">{mep.termStartDate ? new Date(mep.termStartDate).getFullYear() : '2019'}</p>
               </div>
             </CardContent>
           </Card>
