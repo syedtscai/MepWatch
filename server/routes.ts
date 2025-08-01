@@ -194,6 +194,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to start data synchronization" });
     }
   });
+
+  app.get("/api/sync/test-connection", async (req, res) => {
+    try {
+      const isConnected = await dataSyncService.testConnection();
+      res.json({ 
+        connected: isConnected,
+        message: isConnected ? "EU Parliament API connection successful" : "EU Parliament API connection failed"
+      });
+    } catch (error) {
+      console.error("Error testing API connection:", error);
+      res.status(500).json({ error: "Failed to test API connection" });
+    }
+  });
   
   app.get("/api/sync/status", async (req, res) => {
     try {
