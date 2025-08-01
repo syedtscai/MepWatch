@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Eye, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
@@ -81,22 +82,46 @@ const MEPTableRow = ({ mep, onProfileClick }: {
         )}
       </TableCell>
       <TableCell>
-        <div className="flex flex-wrap gap-1 max-w-48">
-          {mep.committees.slice(0, 2).map((committee) => (
-            <Badge 
-              key={committee.committee.id} 
-              variant="secondary"
-              className="text-xs"
-            >
-              {committee.committee.code}
-            </Badge>
-          ))}
-          {mep.committees.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{mep.committees.length - 2}
-            </Badge>
-          )}
-        </div>
+        <TooltipProvider>
+          <div className="flex flex-wrap gap-1 max-w-48">
+            {mep.committees.slice(0, 2).map((committee) => (
+              <Tooltip key={committee.committee.id}>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="secondary"
+                    className="text-xs cursor-help"
+                  >
+                    {committee.committee.code}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">{committee.committee.name}</p>
+                  <p className="text-xs text-muted-foreground">Role: {committee.role}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+            {mep.committees.length > 2 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-xs cursor-help">
+                    +{mep.committees.length - 2}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p className="font-medium mb-2">All Committee Memberships:</p>
+                  <div className="space-y-1">
+                    {mep.committees.map((committee) => (
+                      <div key={committee.committee.id} className="flex justify-between text-xs">
+                        <span className="font-medium">{committee.committee.code}</span>
+                        <span className="text-muted-foreground ml-2">{committee.role}</span>
+                      </div>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </TooltipProvider>
       </TableCell>
       <TableCell>
         <div className="flex items-center space-x-2">
