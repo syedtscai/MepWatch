@@ -12,6 +12,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Major Updates (August 2025)
 
+### CRITICAL Data Integrity Fix - Committee Assignments
+- **Date**: August 1, 2025 (latest)
+- **Status**: Completed ✓
+- **Problem**: Committee assignments were inaccurate due to 180 duplicate MEP records
+- **Solution**: Comprehensive data cleanup successfully merged all duplicates
+- **Results**:
+  - Before: 718 total MEPs with only 538 unique names (180 duplicates)
+  - After: 538 total MEPs with 538 unique names (0 duplicates)
+  - All committee memberships now accurately consolidated per MEP
+  - Example: Adam JARUBAS now shows all 6 committees instead of split data
+- **Impact**: Committee assignments in frontend now reflect true MEP positions
+
 ### Comprehensive Code Refactoring & Performance Optimization
 - **Date**: August 1, 2025
 - **Status**: Completed

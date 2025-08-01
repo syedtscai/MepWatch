@@ -8,8 +8,11 @@ import { schedulerService } from "./services/scheduler";
 import { monitoringService } from "./services/monitoring";
 import { dataQualityService } from "./services/dataQuality";
 import { securityService } from "./services/security";
+import { dataCleanupService } from "./services/dataCleanup";
 import { apiCache } from "./utils/cache";
 import { logger } from "./utils/logger";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { apiRateLimit, exportRateLimit, authRateLimit } from "./middleware/rateLimiting";
 import { monitoringRouter } from "./routes/monitoring";
@@ -266,6 +269,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error triggering manual sync:", error);
       res.status(500).json({ error: "Failed to trigger manual sync" });
+    }
+  });
+
+  // Data cleanup endpoints
+  app.post("/api/cleanup/run", isAuthenticated, async (req, res) => {
+    try {
+      logger.info("Manual data cleanup triggered", 'API');
+      const result = await dataCleanupService.runFullCleanup();
+      res.json(result);
+    } catch (error) {
+      logger.error("Error running data cleanup", 'API', { error: error instanceof Error ? error.message : String(error) });
+      res.status(500).json({ error: "Failed to run data cleanup" });
+    }
+  });
+
+  app.get("/api/cleanup/status", isAuthenticated, async (req, res) => {
+    try {
+      // Get current duplicate count
+      const duplicateQuery = await db.execute(sql`
+        SELECT COUNT(*) as total_meps, COUNT(DISTINCT full_name) as unique_names
+        FROM meps WHERE is_active = true
+      `);
+      const stats = duplicateQuery.rows[0] as any;
+      const duplicatesCount = stats.total_meps - stats.unique_names;
+      
+      res.json({ 
+        duplicatesDetected: duplicatesCount,
+        totalMEPs: stats.total_meps,
+        uniqueNames: stats.unique_names,
+        needsCleanup: duplicatesCount > 0
+      });
+    } catch (error) {
+      logger.error("Error checking cleanup status", 'API', { error: error instanceof Error ? error.message : String(error) });
+      res.status(500).json({ error: "Failed to check cleanup status" });
     }
   });
 
