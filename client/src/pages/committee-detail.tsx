@@ -291,7 +291,7 @@ export default function CommitteeDetail() {
                             <div>
                               <div className="font-medium text-gray-900">{membership.mep.fullName}</div>
                               <div className="text-sm text-slate-gray">
-                                MEP since {new Date(membership.mep.createdAt).getFullYear()}
+                                MEP since {membership.mep.termStartDate ? new Date(membership.mep.termStartDate).getFullYear() : '2019'}
                               </div>
                             </div>
                           </div>

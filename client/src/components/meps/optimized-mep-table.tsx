@@ -63,7 +63,7 @@ const MEPTableRow = ({ mep, onProfileClick }: {
               {mep.fullName}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              MEP since {new Date(mep.createdAt).getFullYear()}
+              MEP since {mep.termStartDate ? new Date(mep.termStartDate).getFullYear() : '2019'}
             </div>
           </div>
         </div>
