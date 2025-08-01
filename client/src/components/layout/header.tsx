@@ -20,11 +20,17 @@ export function Header() {
     window.location.href = "/api/logout";
   };
 
+  // Check if user is admin (simplified check - in production, this would be from user context)
+  const isAdmin = (user as any)?.role === 'admin';
+
   const navigation = [
     { name: "Dashboard", href: "/", current: location === "/" },
     { name: "MEPs", href: "/meps", current: location.startsWith("/meps") },
     { name: "Committees", href: "/committees", current: location.startsWith("/committees") },
-    { name: "Monitoring", href: "/monitoring", current: location.startsWith("/monitoring") },
+    ...(isAdmin ? [
+      { name: "Monitoring", href: "/monitoring", current: location.startsWith("/monitoring") },
+      { name: "Admin", href: "/admin/users", current: location.startsWith("/admin") },
+    ] : []),
   ];
 
   return (

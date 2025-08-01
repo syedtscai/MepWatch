@@ -15,6 +15,7 @@ import CommitteeDetail from "@/pages/committee-detail";
 import Admin from "@/pages/admin";
 import Changes from "@/pages/changes";
 import Monitoring from "@/pages/monitoring";
+import AdminUsers from "@/pages/admin-users";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/admin" component={Admin} />
           <Route path="/changes" component={Changes} />
           <Route path="/monitoring" component={Monitoring} />
+          <Route path="/admin/users" component={AdminUsers} />
         </>
       )}
       <Route component={NotFound} />

@@ -3,6 +3,7 @@ import { monitoringService } from "../services/monitoring";
 import { dataQualityService } from "../services/dataQuality";
 import { securityService } from "../services/security";
 import { isAuthenticated } from "../replitAuth";
+import { isAdmin } from "../middleware/adminAuth";
 
 const router = Router();
 
@@ -22,8 +23,8 @@ router.get("/health", async (req, res) => {
   }
 });
 
-// Performance metrics
-router.get("/metrics/performance", isAuthenticated, async (req, res) => {
+// Performance metrics - admin only
+router.get("/metrics/performance", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const metrics = monitoringService.getMetrics();
     const report = monitoringService.generatePerformanceReport();
@@ -39,8 +40,8 @@ router.get("/metrics/performance", isAuthenticated, async (req, res) => {
   }
 });
 
-// Data quality report
-router.get("/metrics/data-quality", isAuthenticated, async (req, res) => {
+// Data quality report - admin only
+router.get("/metrics/data-quality", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const qualityReport = await dataQualityService.generateQualityReport();
     res.json(qualityReport);
@@ -50,8 +51,8 @@ router.get("/metrics/data-quality", isAuthenticated, async (req, res) => {
   }
 });
 
-// Security report
-router.get("/metrics/security", isAuthenticated, async (req, res) => {
+// Security report - admin only
+router.get("/metrics/security", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const securityReport = await securityService.generateSecurityReport();
     res.json(securityReport);
@@ -61,8 +62,8 @@ router.get("/metrics/security", isAuthenticated, async (req, res) => {
   }
 });
 
-// Monitoring alerts
-router.get("/alerts", isAuthenticated, async (req, res) => {
+// Monitoring alerts - admin only
+router.get("/alerts", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
     const monitoringAlerts = monitoringService.getAlerts(limit);
@@ -84,8 +85,8 @@ router.get("/alerts", isAuthenticated, async (req, res) => {
   }
 });
 
-// Comprehensive system status
-router.get("/status/comprehensive", isAuthenticated, async (req, res) => {
+// Comprehensive system status - admin only
+router.get("/status/comprehensive", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const [
       healthSummary,
@@ -124,8 +125,8 @@ router.get("/status/comprehensive", isAuthenticated, async (req, res) => {
   }
 });
 
-// Manual data quality validation
-router.post("/validate/data-quality", isAuthenticated, async (req, res) => {
+// Manual data quality validation - admin only
+router.post("/validate/data-quality", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const validation = await dataQualityService.validateDailySyncData();
     res.json(validation);
@@ -135,14 +136,48 @@ router.post("/validate/data-quality", isAuthenticated, async (req, res) => {
   }
 });
 
-// Manual security audit
-router.post("/audit/security", isAuthenticated, async (req, res) => {
+// Manual security audit - admin only
+router.post("/audit/security", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const audit = await securityService.performSecurityAudit();
     res.json(audit);
   } catch (error) {
     console.error("Error performing security audit:", error);
     res.status(500).json({ error: "Failed to perform security audit" });
+  }
+});
+
+// Admin user management endpoints
+router.get("/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const { storage } = await import("../storage");
+    const users = await storage.getAllUsers();
+    res.json({ users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+router.post("/admin/users/:userId/role", isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+    
+    if (!["user", "admin"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role. Must be 'user' or 'admin'" });
+    }
+    
+    const { storage } = await import("../storage");
+    const updatedUser = await storage.updateUserRole(userId, role);
+    
+    res.json({ 
+      message: `User role updated to ${role}`,
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    res.status(500).json({ error: "Failed to update user role" });
   }
 });
 
