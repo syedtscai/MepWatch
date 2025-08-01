@@ -72,7 +72,7 @@ export class OptimizedStorage implements IStorage {
     let baseQuery = db.select().from(meps).where(and(...whereConditions));
     
     if (filters?.committee) {
-      baseQuery = baseQuery.where(
+      whereConditions.push(
         inArray(
           meps.id,
           db.select({ id: mepCommittees.mepId })
@@ -84,7 +84,8 @@ export class OptimizedStorage implements IStorage {
     }
 
     // Get paginated MEPs
-    const paginatedMeps = await baseQuery
+    const paginatedMeps = await db.select().from(meps)
+      .where(and(...whereConditions))
       .orderBy(meps.lastName, meps.firstName)
       .limit(limit)
       .offset(offset);

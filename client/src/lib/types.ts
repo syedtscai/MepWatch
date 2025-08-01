@@ -14,6 +14,7 @@ export interface MEP {
   website?: string;
   birthDate?: string;
   birthPlace?: string;
+  termStartDate?: string;
   officialUrl?: string;
   isActive: boolean;
   createdAt: Date;
