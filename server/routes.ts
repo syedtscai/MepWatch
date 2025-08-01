@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { OptimizedStorage } from "./storage/optimized";
 import { dataSyncService } from "./services/dataSync";
 import { exportService } from "./services/exportService";
+import { schedulerService } from "./services/scheduler";
 import { apiCache } from "./utils/cache";
 import { z } from "zod";
 
@@ -216,10 +217,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/sync/status", async (req, res) => {
     try {
       const latestUpdate = await optimizedStorage.getLatestDataUpdate();
-      res.json(latestUpdate || { status: "never_run" });
+      const schedulerStatus = schedulerService.getStatus();
+      res.json({ 
+        lastSync: latestUpdate || { status: "never_run" },
+        scheduler: schedulerStatus
+      });
     } catch (error) {
       console.error("Error fetching sync status:", error);
       res.status(500).json({ error: "Failed to fetch sync status" });
+    }
+  });
+
+  // Scheduler management endpoints
+  app.post("/api/scheduler/trigger", async (req, res) => {
+    try {
+      const result = await schedulerService.triggerManualSync();
+      res.json(result);
+    } catch (error) {
+      console.error("Error triggering manual sync:", error);
+      res.status(500).json({ error: "Failed to trigger manual sync" });
+    }
+  });
+
+  app.get("/api/scheduler/status", async (req, res) => {
+    try {
+      const status = schedulerService.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error fetching scheduler status:", error);
+      res.status(500).json({ error: "Failed to fetch scheduler status" });
     }
   });
   
@@ -252,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!groups) {
         const { meps } = await optimizedStorage.getMEPs({ limit: 1000 });
         const uniqueGroups = Array.from(new Set(meps.map(mep => mep.politicalGroupAbbr).filter(Boolean))).sort();
-        groups = uniqueGroups.map(group => ({ code: group, name: group }));
+        groups = uniqueGroups.map(group => ({ code: group!, name: group! }));
         apiCache.set(cacheKey, groups, 10 * 60 * 1000); // 10 minutes cache
       }
       

@@ -337,7 +337,7 @@ export class DataSyncService {
           console.log(`Processing committee: ${committeeCode} - ${committeeName}`);
           
           // Process chairperson
-          if (body['ep:chairperson']?.length > 0) {
+          if (body['ep:chairperson'] && Array.isArray(body['ep:chairperson']) && body['ep:chairperson'].length > 0) {
             for (const chair of body['ep:chairperson']) {
               const chairId = euParliamentAPI.extractId(chair['@id'] || '');
               const chairName = chair['foaf:name'] || '';
@@ -363,7 +363,7 @@ export class DataSyncService {
           }
           
           // Process members
-          if (body['ep:hasMember']?.length > 0) {
+          if (body['ep:hasMember'] && Array.isArray(body['ep:hasMember']) && body['ep:hasMember'].length > 0) {
             for (const member of body['ep:hasMember']) {
               const memberId = euParliamentAPI.extractId(member['@id'] || '');
               const memberName = member['foaf:name'] || '';
