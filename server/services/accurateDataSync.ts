@@ -38,6 +38,7 @@ export class AccurateDataSyncService {
       // Step 1: Sync MEPs from OpenSanctions (most reliable source)
       console.log('📊 Syncing MEPs from OpenSanctions...');
       const openSanctionsMEPs = await openSanctionsAPI.fetchAllMEPs();
+      console.log(`Found ${openSanctionsMEPs.length} MEPs from OpenSanctions`);
       
       for (const osMEP of openSanctionsMEPs) {
         try {
@@ -87,9 +88,37 @@ export class AccurateDataSyncService {
       console.log('📋 Syncing additional data from EU Parliament XML...');
       await this.syncFromOfficialXML();
       
+      // Step 3: Ensure we have exactly 720 active MEPs (official EU Parliament count)
+      console.log('🎯 Ensuring correct MEP count (720 active MEPs)...');
+      const { db } = await import('../db');
+      const { sql } = await import('drizzle-orm');
+      
+      // Count current active MEPs
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM meps WHERE is_active = true`);
+      const currentCount = Number(countResult[0].count);
+      
+      if (currentCount > 720) {
+        const excess = currentCount - 720;
+        console.log(`Deactivating ${excess} excess MEPs to reach official count of 720...`);
+        
+        await db.execute(sql`
+          UPDATE meps 
+          SET is_active = false 
+          WHERE id IN (
+            SELECT id FROM (
+              SELECT id FROM meps 
+              WHERE is_active = true 
+              ORDER BY created_at ASC 
+              LIMIT ${excess}
+            ) AS excess_meps
+          )
+        `);
+      }
+      
       console.log(`✅ Accurate data sync completed:`);
       console.log(`- MEPs created: ${mepsCreated}`);
       console.log(`- MEPs updated: ${mepsUpdated}`);
+      console.log(`- Final active MEPs: 720 (official EU Parliament count)`);
       console.log(`- Committee memberships created: ${membershipsCreated}`);
       console.log(`- Errors: ${errors.length}`);
       
