@@ -1,0 +1,94 @@
+Product Requirements Document (PRD)
+Product Overview
+Product Name:
+EU MEP Watch
+Objective:
+Provide non-technical business professionals with an easy-to-use, reliable, and updated daily database of all EU Members of Parliament (MEPs) and EU Commission Committees. Enable seamless access, advanced search capabilities, data export functionalities, and real-time updates.
+Target Users:
+Policy analysts
+Lobbyists
+Consultants
+Government affairs teams
+Researchers
+Key User Goals:
+Access up-to-date information about MEPs and committees.
+Quickly find specific MEP profiles and committee details.
+Export relevant data in user-friendly formats (CSV, Excel, PDF).
+Monitor changes in MEP memberships and committee structures.
+Functional Requirements
+1. Data Management:
+Automatically update data every day.
+MEP data source:
+List of MEPs: https://www.europarl.europa.eu/meps/en/full-list/json
+Individual MEP profiles: https://www.europarl.europa.eu/meps/en/{MEP_ID}/json
+Record changes clearly (new entries, departures, role changes).
+Committee data is extracted directly from individual MEP profiles, which include details on the committees each MEP participates in.
+
+
+2. User Interface & User Experience:
+Easy-to-use web interface accessible from computers and mobile devices.
+Dashboard showing:
+Total numbers of MEPs and committees.
+Date and time of the last data update.
+Simple search and filtering:
+Search by name with flexible search capabilities.
+Filters: country, political party, committee membership.
+Profile pages:
+MEP: photo, name, nationality, political party, committees, contact details.
+Committee: name, mandate, chairperson, list of members.
+3. Data Export:
+Export data easily in CSV, Excel, or PDF formats.
+Option to schedule weekly email reports.
+
+
+4. Notifications:
+Option to get daily or significant change updates via email.
+
+Technical Specifications
+Technology:
+Web Application built using modern, user-friendly frameworks.
+Backend: Simple data handling with automatic updates.
+Database: User-friendly storage that updates itself daily.
+
+
+Basic Structure:
+Clear and simple webpages that load quickly.
+Easy-to-use APIs to retrieve and update data.
+
+Deployment & Maintenance:
+Automatic updates daily.
+Clearly documented simple deployment instructions.
+Regular data backups with clear recovery steps.
+
+
+Security & Privacy:
+Secure login for user protection.
+Compliant with data protection (GDPR).
+Clear record of any changes.
+
+Non-Functional Requirements
+Performance:
+Fast loading times (under 2 seconds).
+Quick data retrieval (under half a second).
+Scalability:
+Can handle multiple users simultaneously without slowing down.
+Accessibility:
+Easy-to-use design suitable for all users.
+Multi-language support (English, French, German).
+Documentation & Support:
+Simple user guide with clear instructions and images.
+Easy-to-follow setup and troubleshooting guide.
+Help icons with tips available directly in the application.
+
+
+Future Considerations:
+Enhanced analytics dashboard.
+Easier search using everyday language.
+Visual timeline for changes in membership.
+Success Metrics:
+High adoption by users (70% monthly activity).
+High satisfaction rating (4 out of 5).
+Reliable system with minimal downtime (99.9% uptime).
+
+
+
