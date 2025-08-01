@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Users, Bus } from "lucide-react";
+import { ArrowLeft, Users, Bus, Calendar, MapPin, Clock, FileText, Video } from "lucide-react";
 import { Link } from "wouter";
+import { format } from "date-fns";
 
 export default function CommitteeDetail() {
   const [, params] = useRoute("/committees/:id");
@@ -16,6 +17,12 @@ export default function CommitteeDetail() {
   const { data: committee, isLoading } = useQuery({
     queryKey: ['/api/committees', committeeId],
     queryFn: () => api.getCommittee(committeeId!),
+    enabled: !!committeeId,
+  });
+
+  const { data: events, isLoading: eventsLoading } = useQuery({
+    queryKey: ['/api/committees', committeeId, 'events'],
+    queryFn: () => fetch(`/api/committees/${committeeId}/events?months=3`).then(res => res.json()),
     enabled: !!committeeId,
   });
 
@@ -122,6 +129,108 @@ export default function CommitteeDetail() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Events */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Calendar className="w-5 h-5 mr-2" />
+              Upcoming Events (Next 3 Months)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {eventsLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : !events || events.length === 0 ? (
+              <div className="text-center py-8 text-slate-gray">
+                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No upcoming events scheduled for the next 3 months</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {events.map((event: any) => (
+                  <div key={event.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg text-gray-900 mb-2">{event.title}</h3>
+                        <div className="flex flex-wrap gap-4 text-sm text-slate-gray mb-3">
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 mr-1" />
+                            {format(new Date(event.startDate), 'PPP')} at {format(new Date(event.startDate), 'p')}
+                            {event.endDate && ` - ${format(new Date(event.endDate), 'p')}`}
+                          </div>
+                          {event.location && (
+                            <div className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              {event.location}
+                            </div>
+                          )}
+                        </div>
+                        {event.description && (
+                          <p className="text-gray-700 mb-3">{event.description}</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end space-y-2">
+                        <Badge 
+                          variant={event.eventType === 'hearing' ? 'default' : 'secondary'}
+                          className="capitalize"
+                        >
+                          {event.eventType}
+                        </Badge>
+                        {event.meetingType && (
+                          <Badge variant="outline" className="capitalize">
+                            {event.meetingType.replace('_', ' ')}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {event.agenda && (
+                      <div className="bg-gray-50 rounded p-3 mb-3">
+                        <div className="flex items-center mb-2">
+                          <FileText className="w-4 h-4 mr-1 text-slate-gray" />
+                          <span className="font-medium text-sm">Agenda</span>
+                        </div>
+                        <p className="text-sm text-gray-700">{event.agenda}</p>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex space-x-2">
+                        {event.documentsUrl && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={event.documentsUrl} target="_blank" rel="noopener noreferrer">
+                              <FileText className="w-4 h-4 mr-1" />
+                              Documents
+                            </a>
+                          </Button>
+                        )}
+                        {event.liveStreamUrl && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={event.liveStreamUrl} target="_blank" rel="noopener noreferrer">
+                              <Video className="w-4 h-4 mr-1" />
+                              Live Stream
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-gray">
+                        {event.isPublic ? 'Public Event' : 'Closed Meeting'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

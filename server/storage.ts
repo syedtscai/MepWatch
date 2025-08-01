@@ -4,6 +4,7 @@ import {
   mepCommittees, 
   dataUpdates, 
   changeLog,
+  committeeEvents,
   type MEP, 
   type InsertMEP,
   type Committee, 
@@ -14,11 +15,13 @@ import {
   type InsertDataUpdate,
   type ChangeLog,
   type InsertChangeLog,
+  type CommitteeEvent,
+  type InsertCommitteeEvent,
   type MEPWithCommittees,
   type CommitteeWithMembers
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like, and, or, sql, count, ilike } from "drizzle-orm";
+import { eq, desc, like, and, or, sql, count, ilike, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // MEPs
@@ -42,6 +45,10 @@ export interface IStorage {
   createCommittee(committee: InsertCommittee): Promise<Committee>;
   updateCommittee(id: string, committee: Partial<InsertCommittee>): Promise<Committee>;
   deleteCommittee(id: string): Promise<void>;
+  
+  // Committee Events
+  getCommitteeEvents(committeeId: string, months?: number): Promise<CommitteeEvent[]>;
+  createCommitteeEvent(event: InsertCommitteeEvent): Promise<CommitteeEvent>;
   
   // MEP-Committee relationships
   addMEPToCommittee(mepCommittee: InsertMEPCommittee): Promise<MEPCommittee>;
@@ -276,6 +283,28 @@ export class DatabaseStorage implements IStorage {
   
   async deleteCommittee(id: string) {
     await db.delete(committees).where(eq(committees.id, id));
+  }
+
+  async getCommitteeEvents(committeeId: string, months = 3) {
+    const futureDate = new Date();
+    futureDate.setMonth(futureDate.getMonth() + months);
+    
+    return await db
+      .select()
+      .from(committeeEvents)
+      .where(
+        and(
+          eq(committeeEvents.committeeId, committeeId),
+          gte(committeeEvents.startDate, new Date()),
+          lte(committeeEvents.startDate, futureDate)
+        )
+      )
+      .orderBy(committeeEvents.startDate);
+  }
+
+  async createCommitteeEvent(event: InsertCommitteeEvent) {
+    const [created] = await db.insert(committeeEvents).values(event).returning();
+    return created;
   }
   
   async addMEPToCommittee(mepCommittee: InsertMEPCommittee) {

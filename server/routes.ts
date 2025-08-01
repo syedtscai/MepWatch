@@ -116,6 +116,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch committee" });
     }
   });
+
+  // Committee events endpoints
+  app.get("/api/committees/:id/events", async (req, res) => {
+    try {
+      const committeeId = req.params.id;
+      const months = parseInt(req.query.months as string) || 3;
+      
+      const events = await storage.getCommitteeEvents(committeeId, months);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching committee events:", error);
+      res.status(500).json({ error: "Failed to fetch committee events" });
+    }
+  });
   
   // Export endpoints
   app.get("/api/export/meps/csv", async (req, res) => {

@@ -67,6 +67,24 @@ export const changeLog = pgTable("change_log", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const committeeEvents = pgTable("committee_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  committeeId: varchar("committee_id").notNull().references(() => committees.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  eventType: varchar("event_type", { length: 20 }).notNull(), // 'meeting', 'hearing', 'workshop', 'session'
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  location: text("location"),
+  meetingType: varchar("meeting_type", { length: 20 }), // 'ordinary', 'extraordinary', 'public_hearing'
+  agenda: text("agenda"),
+  documentsUrl: text("documents_url"),
+  liveStreamUrl: text("live_stream_url"),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Relations
 export const mepsRelations = relations(meps, ({ many }) => ({
   committees: many(mepCommittees),
@@ -74,6 +92,14 @@ export const mepsRelations = relations(meps, ({ many }) => ({
 
 export const committeesRelations = relations(committees, ({ many }) => ({
   members: many(mepCommittees),
+  events: many(committeeEvents),
+}));
+
+export const committeeEventsRelations = relations(committeeEvents, ({ one }) => ({
+  committee: one(committees, {
+    fields: [committeeEvents.committeeId],
+    references: [committees.id],
+  }),
 }));
 
 export const mepCommitteesRelations = relations(mepCommittees, ({ one }) => ({
@@ -112,6 +138,12 @@ export const insertChangeLogSchema = createInsertSchema(changeLog).omit({
   createdAt: true,
 });
 
+export const insertCommitteeEventSchema = createInsertSchema(committeeEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type MEP = typeof meps.$inferSelect;
 export type InsertMEP = z.infer<typeof insertMepSchema>;
@@ -123,6 +155,8 @@ export type DataUpdate = typeof dataUpdates.$inferSelect;
 export type InsertDataUpdate = z.infer<typeof insertDataUpdateSchema>;
 export type ChangeLog = typeof changeLog.$inferSelect;
 export type InsertChangeLog = z.infer<typeof insertChangeLogSchema>;
+export type CommitteeEvent = typeof committeeEvents.$inferSelect;
+export type InsertCommitteeEvent = z.infer<typeof insertCommitteeEventSchema>;
 
 // Extended types for API responses
 export type MEPWithCommittees = MEP & {
@@ -131,4 +165,8 @@ export type MEPWithCommittees = MEP & {
 
 export type CommitteeWithMembers = Committee & {
   members: (MEPCommittee & { mep: MEP })[];
+};
+
+export type CommitteeWithEvents = Committee & {
+  events: CommitteeEvent[];
 };
