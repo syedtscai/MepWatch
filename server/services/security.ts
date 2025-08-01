@@ -102,12 +102,12 @@ export class SecurityService {
 
     try {
       // Check for suspicious authentication patterns
-      const suspiciousAuthQuery = await db.execute(`
+      const suspiciousAuthQuery = await db.execute(sql`
         SELECT 
           COUNT(*) as failed_attempts,
           COUNT(DISTINCT sid) as unique_sessions
         FROM sessions 
-        WHERE created_at > NOW() - INTERVAL '24 hours'
+        WHERE expire > NOW() - INTERVAL '24 hours'
       `);
 
       // Check database security
