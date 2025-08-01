@@ -61,7 +61,7 @@ export class DataSyncService {
     try {
       // Fetch current MEPs from EU API
       const mepsResponse = await euParliamentAPI.fetchCurrentMEPs();
-      const mepsData = mepsResponse['@graph'];
+      const mepsData = mepsResponse['data'] || mepsResponse['@graph'] || [];
       
       console.log(`Found ${mepsData.length} current MEPs`);
       
@@ -131,7 +131,7 @@ export class DataSyncService {
     try {
       // Fetch corporate bodies from EU API (includes committees)
       const bodiesResponse = await euParliamentAPI.fetchCorporateBodies();
-      const bodiesData = bodiesResponse['@graph'];
+      const bodiesData = bodiesResponse['data'] || bodiesResponse['@graph'] || [];
       
       console.log(`Found ${bodiesData.length} corporate bodies`);
       
@@ -210,7 +210,7 @@ export class DataSyncService {
         now.toISOString().split('T')[0],
         futureDate.toISOString().split('T')[0]
       );
-      const eventsData = eventsResponse['@graph'];
+      const eventsData = eventsResponse['data'] || eventsResponse['@graph'] || [];
       
       console.log(`Found ${eventsData.length} upcoming events`);
       
@@ -289,7 +289,7 @@ export class DataSyncService {
     try {
       // Get committees with members from EU Parliament API
       const committeeResponse = await euParliamentAPI.fetchCommitteesWithMembers();
-      const committeesBodies = committeeResponse['@graph'] || [];
+      const committeesBodies = committeeResponse['data'] || committeeResponse['@graph'] || [];
       
       console.log(`Found ${committeesBodies.length} corporate bodies`);
       
@@ -423,8 +423,9 @@ export class DataSyncService {
       console.log('Testing EU Parliament API connection...');
       const response = await euParliamentAPI.fetchCurrentMEPs();
       
-      if (response && response['@graph'] && Array.isArray(response['@graph'])) {
-        console.log(`API test successful. Found ${response['@graph'].length} MEPs`);
+      const data = response['data'] || response['@graph'];
+      if (response && data && Array.isArray(data)) {
+        console.log(`API test successful. Found ${data.length} MEPs`);
         return true;
       } else {
         console.log('API response structure unexpected:', JSON.stringify(response).substring(0, 200) + '...');
