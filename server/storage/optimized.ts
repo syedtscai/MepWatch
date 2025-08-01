@@ -447,17 +447,22 @@ export class OptimizedStorage implements IStorage {
     const cached = apiCache.get<any>(cacheKey);
     if (cached) return cached;
 
-    const [mepCount, committeeCount, countryCount, latestUpdate] = await Promise.all([
+    const [mepCount, committeeCount, latestUpdate] = await Promise.all([
       db.select({ count: count() }).from(meps).where(eq(meps.isActive, true)),
       db.select({ count: count() }).from(committees).where(eq(committees.isActive, true)),
-      db.select({ count: count(meps.country) }).from(meps).where(eq(meps.isActive, true)),
       this.getLatestDataUpdate()
     ]);
+
+    // Get unique country count properly
+    const countryCountResult = await db
+      .select({ count: sql<number>`COUNT(DISTINCT ${meps.country})` })
+      .from(meps)
+      .where(and(eq(meps.isActive, true), sql`${meps.country} != ''`));
 
     const stats = {
       totalMEPs: mepCount[0].count,
       totalCommittees: committeeCount[0].count,
-      totalCountries: countryCount[0].count,
+      totalCountries: Number(countryCountResult[0].count),
       lastUpdate: latestUpdate?.completedAt || null
     };
 
