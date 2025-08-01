@@ -61,7 +61,7 @@ export class DataSyncService {
     try {
       // Fetch current MEPs from EU API
       const mepsResponse = await euParliamentAPI.fetchCurrentMEPs();
-      const mepsData = mepsResponse['data'] || mepsResponse['@graph'];
+      const mepsData = mepsResponse['@graph'];
       
       console.log(`Found ${mepsData.length} current MEPs`);
       
@@ -131,7 +131,7 @@ export class DataSyncService {
     try {
       // Fetch corporate bodies from EU API (includes committees)
       const bodiesResponse = await euParliamentAPI.fetchCorporateBodies();
-      const bodiesData = bodiesResponse['data'] || bodiesResponse['@graph'];
+      const bodiesData = bodiesResponse['@graph'];
       
       console.log(`Found ${bodiesData.length} corporate bodies`);
       
@@ -210,7 +210,7 @@ export class DataSyncService {
         now.toISOString().split('T')[0],
         futureDate.toISOString().split('T')[0]
       );
-      const eventsData = eventsResponse['data'] || eventsResponse['@graph'];
+      const eventsData = eventsResponse['@graph'];
       
       console.log(`Found ${eventsData.length} upcoming events`);
       
@@ -288,7 +288,7 @@ export class DataSyncService {
     
     try {
       // Get committees with members from EU Parliament API
-      const committeeResponse = await this.euApi.fetchCommitteesWithMembers();
+      const committeeResponse = await euParliamentAPI.fetchCommitteesWithMembers();
       const committeesBodies = committeeResponse['@graph'] || [];
       
       console.log(`Found ${committeesBodies.length} corporate bodies`);
@@ -316,7 +316,7 @@ export class DataSyncService {
           // Process chairperson
           if (body['ep:chairperson']?.length > 0) {
             for (const chair of body['ep:chairperson']) {
-              const chairId = this.euApi.extractId(chair['@id'] || '');
+              const chairId = euParliamentAPI.extractId(chair['@id'] || '');
               const chairName = chair['foaf:name'] || '';
               
               // Find MEP by ID or name
@@ -326,10 +326,7 @@ export class DataSyncService {
                   await storage.createMEPCommittee({
                     mepId: mep.id,
                     committeeId: committee.id,
-                    role: 'chair',
-                    startDate: new Date('2024-07-01'),
-                    endDate: null,
-                    isActive: true
+                    role: 'chair'
                   });
                   created++;
                   console.log(`Added chair: ${chairName} to ${committeeCode}`);
@@ -343,7 +340,7 @@ export class DataSyncService {
           // Process members
           if (body['ep:hasMember']?.length > 0) {
             for (const member of body['ep:hasMember']) {
-              const memberId = this.euApi.extractId(member['@id'] || '');
+              const memberId = euParliamentAPI.extractId(member['@id'] || '');
               const memberName = member['foaf:name'] || '';
               const roleLabel = member['ep:role']?.[0]?.['skos:prefLabel']?.['en'] || 'member';
               
@@ -355,10 +352,7 @@ export class DataSyncService {
                   await storage.createMEPCommittee({
                     mepId: mep.id,
                     committeeId: committee.id,
-                    role: role,
-                    startDate: new Date('2024-07-01'),
-                    endDate: null,
-                    isActive: true
+                    role: role
                   });
                   created++;
                 } catch (error) {
@@ -429,10 +423,7 @@ export class DataSyncService {
       console.log('Testing EU Parliament API connection...');
       const response = await euParliamentAPI.fetchCurrentMEPs();
       
-      if (response && response['data'] && Array.isArray(response['data'])) {
-        console.log(`API test successful. Found ${response['data'].length} MEPs`);
-        return true;
-      } else if (response && response['@graph'] && Array.isArray(response['@graph'])) {
+      if (response && response['@graph'] && Array.isArray(response['@graph'])) {
         console.log(`API test successful. Found ${response['@graph'].length} MEPs`);
         return true;
       } else {
