@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { useAuth } from "@/hooks/useAuth";
+import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import MEPs from "@/pages/meps";
 import MEPProfile from "@/pages/mep-profile";
@@ -15,15 +17,23 @@ import Changes from "@/pages/changes";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/meps" component={MEPs} />
-      <Route path="/meps/:id" component={MEPProfile} />
-      <Route path="/committees" component={Committees} />
-      <Route path="/committees/:id" component={CommitteeDetail} />
-      <Route path="/admin" component={Admin} />
-      <Route path="/changes" component={Changes} />
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={Landing} />
+      ) : (
+        <>
+          <Route path="/" component={Dashboard} />
+          <Route path="/meps" component={MEPs} />
+          <Route path="/meps/:id" component={MEPProfile} />
+          <Route path="/committees" component={Committees} />
+          <Route path="/committees/:id" component={CommitteeDetail} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/changes" component={Changes} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );
@@ -33,16 +43,28 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-1">
-            <Router />
-          </main>
-          <Footer />
-        </div>
+        <AuthenticatedApp />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
+  );
+}
+
+function AuthenticatedApp() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading || !isAuthenticated) {
+    return <Router />;
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <Router />
+      </main>
+      <Footer />
+    </div>
   );
 }
 

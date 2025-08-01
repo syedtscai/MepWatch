@@ -6,6 +6,7 @@ import { dataSyncService } from "./services/dataSync";
 import { exportService } from "./services/exportService";
 import { schedulerService } from "./services/scheduler";
 import { apiCache } from "./utils/cache";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 
 // Use optimized storage by default
@@ -21,9 +22,23 @@ const searchFiltersSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
   
   // Dashboard stats with caching
-  app.get("/api/dashboard/stats", async (req, res) => {
+  app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
     try {
       const stats = await optimizedStorage.getDashboardStats();
       res.json(stats);
@@ -34,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Recent changes with caching
-  app.get("/api/dashboard/recent-changes", async (req, res) => {
+  app.get("/api/dashboard/recent-changes", isAuthenticated, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const changes = await optimizedStorage.getRecentChanges(limit);
@@ -46,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // MEPs endpoints
-  app.get("/api/meps", async (req, res) => {
+  app.get("/api/meps", isAuthenticated, async (req, res) => {
     try {
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
@@ -73,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/meps/:id", async (req, res) => {
+  app.get("/api/meps/:id", isAuthenticated, async (req, res) => {
     try {
       const mep = await optimizedStorage.getMEP(req.params.id);
       if (!mep) {
@@ -87,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Committees endpoints
-  app.get("/api/committees", async (req, res) => {
+  app.get("/api/committees", isAuthenticated, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
@@ -110,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/committees/:id", async (req, res) => {
+  app.get("/api/committees/:id", isAuthenticated, async (req, res) => {
     try {
       const committee = await optimizedStorage.getCommittee(req.params.id);
       if (!committee) {
@@ -124,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Committee events endpoints
-  app.get("/api/committees/:id/events", async (req, res) => {
+  app.get("/api/committees/:id/events", isAuthenticated, async (req, res) => {
     try {
       const committeeId = req.params.id;
       const months = parseInt(req.query.months as string) || 3;
@@ -138,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Export endpoints
-  app.get("/api/export/meps/csv", async (req, res) => {
+  app.get("/api/export/meps/csv", isAuthenticated, async (req, res) => {
     try {
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
@@ -172,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/export/committees/csv", async (req, res) => {
+  app.get("/api/export/committees/csv", isAuthenticated, async (req, res) => {
     try {
       const csvContent = await exportService.exportCommitteesToCSV();
       const filename = exportService.generateFilename('csv', 'committees');
@@ -187,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Data sync endpoints (for manual triggers and status)
-  app.post("/api/sync/trigger", async (req, res) => {
+  app.post("/api/sync/trigger", isAuthenticated, async (req, res) => {
     try {
       // Start sync in background
       dataSyncService.syncAllData().catch(error => {
@@ -201,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/sync/test-connection", async (req, res) => {
+  app.get("/api/sync/test-connection", isAuthenticated, async (req, res) => {
     try {
       const isConnected = await dataSyncService.testConnection();
       res.json({ 
@@ -214,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/sync/status", async (req, res) => {
+  app.get("/api/sync/status", isAuthenticated, async (req, res) => {
     try {
       const latestUpdate = await optimizedStorage.getLatestDataUpdate();
       const schedulerStatus = schedulerService.getStatus();
@@ -229,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Scheduler management endpoints
-  app.post("/api/scheduler/trigger", async (req, res) => {
+  app.post("/api/scheduler/trigger", isAuthenticated, async (req, res) => {
     try {
       const result = await schedulerService.triggerManualSync();
       res.json(result);
@@ -239,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/scheduler/status", async (req, res) => {
+  app.get("/api/scheduler/status", isAuthenticated, async (req, res) => {
     try {
       const status = schedulerService.getStatus();
       res.json(status);
@@ -250,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Filter options endpoints
-  app.get("/api/filters/countries", async (req, res) => {
+  app.get("/api/filters/countries", isAuthenticated, async (req, res) => {
     try {
       // Use caching for filter options
       const cacheKey = 'filter_countries';
@@ -270,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/filters/political-groups", async (req, res) => {
+  app.get("/api/filters/political-groups", isAuthenticated, async (req, res) => {
     try {
       const cacheKey = 'filter_political_groups';
       let groups = apiCache.get<Array<{ code: string; name: string }>>(cacheKey);
@@ -289,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/filters/committees", async (req, res) => {
+  app.get("/api/filters/committees", isAuthenticated, async (req, res) => {
     try {
       const cacheKey = 'filter_committees';
       let committees = apiCache.get<Array<{ code: string; name: string }>>(cacheKey);
