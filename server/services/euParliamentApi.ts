@@ -161,8 +161,14 @@ export class EUParliamentAPI {
   }
 
   async fetchCommitteesWithMembers(): Promise<EUAPIResponse<EUCorporateBodyData>> {
-    // Fetch committees using the correct parameter format
-    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies?body-classification=COMMITTEE&limit=50`);
+    // Fetch committees using the correct parameter format - request JSON format explicitly
+    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies?body-classification=COMMITTEE&format=application/ld+json&limit=50`);
+    return await response.json();
+  }
+
+  async fetchDetailedCommitteeInfo(committeeId: string): Promise<EUAPIResponse<EUCorporateBodyData>> {
+    // Fetch detailed committee information including leadership
+    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies/${committeeId}?format=application/ld+json`);
     return await response.json();
   }
 
@@ -222,6 +228,26 @@ export class EUParliamentAPI {
     
     if (!name) return null;
     
+    // Extract chairperson information if available
+    let chairpersonName = null;
+    let chairpersonId = null;
+    
+    // Look for membership information with chair role
+    if (euBody.hasMembership && Array.isArray(euBody.hasMembership)) {
+      const chairMembership = euBody.hasMembership.find((membership: any) => 
+        membership.role && (
+          membership.role.includes('chair') || 
+          membership.role.includes('Chair') ||
+          membership.role.includes('CHAIR')
+        )
+      );
+      
+      if (chairMembership && chairMembership.member) {
+        chairpersonName = chairMembership.member.label || '';
+        chairpersonId = this.extractId(chairMembership.member.id || '');
+      }
+    }
+    
     // Filter to only include actual parliamentary committees
     // Known EU Parliament committees have specific naming patterns
     const isCommittee = this.isActualCommittee(name, code);
@@ -233,6 +259,8 @@ export class EUParliamentAPI {
       code: code,
       name: name,
       nameNational: null,
+      chairpersonName,
+      chairpersonId,
       coordinatorName: null, // Would need additional API call
       coordinatorGroup: null, // Would need additional API call
       isActive: true,

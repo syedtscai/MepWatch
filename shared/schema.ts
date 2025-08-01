@@ -29,6 +29,8 @@ export const committees = pgTable("committees", {
   code: varchar("code", { length: 10 }).notNull().unique(),
   name: text("name").notNull(),
   nameNational: text("name_national"),
+  chairpersonName: text("chairperson_name"),
+  chairpersonId: varchar("chairperson_id"),
   coordinatorName: text("coordinator_name"),
   coordinatorGroup: text("coordinator_group"),
   isActive: boolean("is_active").default(true),
