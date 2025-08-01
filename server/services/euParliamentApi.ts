@@ -206,10 +206,10 @@ export class EUParliamentAPI {
       firstName: euMep.givenName || '',
       lastName: euMep.familyName || '',
       fullName: euMep.label || `${euMep.givenName || ''} ${euMep.familyName || ''}`.trim(),
-      country: euMep['country-of-representation'] || '',
-      politicalGroup: euMep['political-group'] || '',
-      politicalGroupAbbr: euMep['political-group'] || '',
-      nationalPoliticalGroup: euMep['national-political-group'] || '',
+      country: euMep['api:country-of-representation'] || euMep['country-of-representation'] || '',
+      politicalGroup: euMep['api:political-group'] || euMep['political-group'] || '',
+      politicalGroupAbbr: euMep['api:political-group'] || euMep['political-group'] || '',
+      nationalPoliticalGroup: euMep['api:national-political-group'] || euMep['national-political-group'] || '',
       photoUrl: null, // Available through detailed MEP endpoint
       email: null, // Available through detailed MEP endpoint
       twitter: null, // Not provided in basic API
