@@ -24,6 +24,7 @@ export function Header() {
     { name: "Dashboard", href: "/", current: location === "/" },
     { name: "MEPs", href: "/meps", current: location.startsWith("/meps") },
     { name: "Committees", href: "/committees", current: location.startsWith("/committees") },
+    { name: "Monitoring", href: "/monitoring", current: location.startsWith("/monitoring") },
   ];
 
   return (

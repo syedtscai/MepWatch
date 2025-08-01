@@ -5,8 +5,13 @@ import { OptimizedStorage } from "./storage/optimized";
 import { dataSyncService } from "./services/dataSync";
 import { exportService } from "./services/exportService";
 import { schedulerService } from "./services/scheduler";
+import { monitoringService } from "./services/monitoring";
+import { dataQualityService } from "./services/dataQuality";
+import { securityService } from "./services/security";
 import { apiCache } from "./utils/cache";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { apiRateLimit, exportRateLimit, authRateLimit } from "./middleware/rateLimiting";
+import { monitoringRouter } from "./routes/monitoring";
 import { z } from "zod";
 
 // Use optimized storage by default
@@ -22,8 +27,17 @@ const searchFiltersSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize monitoring services
+  console.log("🚀 Initializing production monitoring services...");
+  await monitoringService.startPerformanceMonitoring();
+  await dataQualityService.startQualityMonitoring();
+  await securityService.startSecurityMonitoring();
+  
   // Auth middleware
   await setupAuth(app);
+
+  // Monitoring and admin routes
+  app.use("/api/monitoring", monitoringRouter);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -37,8 +51,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Dashboard stats with caching
-  app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
+  // Dashboard stats with caching and rate limiting
+  app.get("/api/dashboard/stats", apiRateLimit, isAuthenticated, async (req, res) => {
     try {
       const stats = await optimizedStorage.getDashboardStats();
       res.json(stats);
@@ -48,8 +62,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Recent changes with caching
-  app.get("/api/dashboard/recent-changes", isAuthenticated, async (req, res) => {
+  // Recent changes with caching and rate limiting
+  app.get("/api/dashboard/recent-changes", apiRateLimit, isAuthenticated, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const changes = await optimizedStorage.getRecentChanges(limit);
@@ -60,8 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // MEPs endpoints
-  app.get("/api/meps", isAuthenticated, async (req, res) => {
+  // MEPs endpoints with rate limiting
+  app.get("/api/meps", apiRateLimit, isAuthenticated, async (req, res) => {
     try {
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
@@ -88,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/meps/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/meps/:id", apiRateLimit, isAuthenticated, async (req, res) => {
     try {
       const mep = await optimizedStorage.getMEP(req.params.id);
       if (!mep) {
@@ -101,8 +115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Committees endpoints
-  app.get("/api/committees", isAuthenticated, async (req, res) => {
+  // Committees endpoints with rate limiting
+  app.get("/api/committees", apiRateLimit, isAuthenticated, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
@@ -125,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/committees/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/committees/:id", apiRateLimit, isAuthenticated, async (req, res) => {
     try {
       const committee = await optimizedStorage.getCommittee(req.params.id);
       if (!committee) {
@@ -152,8 +166,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Export endpoints
-  app.get("/api/export/meps/csv", isAuthenticated, async (req, res) => {
+  // Export endpoints with strict rate limiting
+  app.get("/api/export/meps/csv", exportRateLimit, isAuthenticated, async (req, res) => {
     try {
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
@@ -170,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/export/meps/json", async (req, res) => {
+  app.get("/api/export/meps/json", exportRateLimit, isAuthenticated, async (req, res) => {
     try {
       const filters = searchFiltersSchema.parse(req.query);
       const { page, limit, ...searchFilters } = filters;
@@ -187,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/export/committees/csv", isAuthenticated, async (req, res) => {
+  app.get("/api/export/committees/csv", exportRateLimit, isAuthenticated, async (req, res) => {
     try {
       const csvContent = await exportService.exportCommitteesToCSV();
       const filename = exportService.generateFilename('csv', 'committees');
