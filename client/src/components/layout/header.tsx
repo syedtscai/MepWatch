@@ -70,7 +70,7 @@ export function Header() {
               <DropdownMenuContent align="end">
                 {user && (
                   <div className="px-2 py-1.5 text-sm text-gray-600">
-                    {(user as any).email || 'Authenticated User'}
+                    {(user as any)?.email || 'Authenticated User'}
                   </div>
                 )}
                 <DropdownMenuItem onClick={handleLogout}>
