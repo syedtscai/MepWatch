@@ -3,12 +3,12 @@ import { Users, Layers, Globe, RefreshCw } from "lucide-react";
 import type { DashboardStats } from "@/lib/types";
 
 interface MetricsCardsProps {
-  stats: DashboardStats;
+  stats?: DashboardStats;
   isLoading?: boolean;
 }
 
 export function MetricsCards({ stats, isLoading }: MetricsCardsProps) {
-  if (isLoading) {
+  if (isLoading || !stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[1, 2, 3, 4].map((i) => (

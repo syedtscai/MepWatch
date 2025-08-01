@@ -5,6 +5,7 @@ import {
   dataUpdates, 
   changeLog,
   committeeEvents,
+  users,
   type MEP, 
   type InsertMEP,
   type Committee, 
@@ -17,6 +18,8 @@ import {
   type InsertChangeLog,
   type CommitteeEvent,
   type InsertCommitteeEvent,
+  type User,
+  type UpsertUser,
   type MEPWithCommittees,
   type CommitteeWithMembers
 } from "@shared/schema";
@@ -510,5 +513,42 @@ export class OptimizedStorage implements IStorage {
       }
     });
     keysToDelete.forEach(key => apiCache.delete(key));
+  }
+
+  // User management methods (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async upsertUser(user: UpsertUser): Promise<User> {
+    const [upserted] = await db
+      .insert(users)
+      .values(user)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          updatedAt: sql`CURRENT_TIMESTAMP`
+        }
+      })
+      .returning();
+    return upserted;
+  }
+
+  async updateUserRole(userId: string, role: "user" | "admin"): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({ role, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
   }
 }

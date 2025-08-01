@@ -74,7 +74,7 @@ export default function Dashboard() {
         </div>
 
         {/* Metrics Cards */}
-        <MetricsCards stats={stats!} isLoading={statsLoading} />
+        <MetricsCards stats={stats} isLoading={statsLoading} />
 
         {/* Search and Filters */}
         <div className="mb-8">
