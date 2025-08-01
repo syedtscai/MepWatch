@@ -276,7 +276,7 @@ export class AccurateDataSyncService {
     try {
       console.log('Fetching official EU Parliament XML data...');
       
-      const response = await fetch('http://www.europarl.europa.eu/meps/en/full-list/xml');
+      const response = await fetch('https://www.europarl.europa.eu/meps/en/full-list/xml');
       
       if (!response.ok) {
         console.log('Official EU Parliament XML not accessible, skipping...');
