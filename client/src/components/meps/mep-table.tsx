@@ -92,7 +92,11 @@ export function MEPTable({ data, isLoading, onPageChange }: MEPTableProps) {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-gray-900">{mep.fullName}</div>
+                        <Link href={`/meps/${mep.id}`}>
+                          <div className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                            {mep.fullName}
+                          </div>
+                        </Link>
                         <div className="text-sm text-slate-gray">
                           MEP since {mep.termStartDate ? new Date(mep.termStartDate).getFullYear() : '2019'}
                         </div>
@@ -125,11 +129,6 @@ export function MEPTable({ data, isLoading, onPageChange }: MEPTableProps) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Link href={`/meps/${mep.id}`}>
-                        <Button variant="ghost" size="sm" title="View profile">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
                       {mep.officialUrl && (
                         <a
                           href={mep.officialUrl}
