@@ -1,0 +1,86 @@
+import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Bell, User, Menu } from "lucide-react";
+import { useState } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+export function Header() {
+  const [location] = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navigation = [
+    { name: "Dashboard", href: "/", current: location === "/" },
+    { name: "MEPs", href: "/meps", current: location.startsWith("/meps") },
+    { name: "Committees", href: "/committees", current: location.startsWith("/committees") },
+  ];
+
+  return (
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <i className="fas fa-landmark text-white text-sm"></i>
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">EU MEP Watch</h1>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`font-medium ${
+                  item.current
+                    ? "text-primary"
+                    : "text-slate-gray hover:text-gray-900"
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5 text-slate-gray" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5 text-slate-gray" />
+            </Button>
+
+            {/* Mobile menu button */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <nav className="flex flex-col space-y-4 mt-6">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`text-lg font-medium ${
+                        item.current
+                          ? "text-primary"
+                          : "text-slate-gray hover:text-gray-900"
+                      }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
