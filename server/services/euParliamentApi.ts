@@ -161,20 +161,25 @@ export class EUParliamentAPI {
   }
 
   async fetchCommitteesWithMembers(): Promise<EUAPIResponse<EUCorporateBodyData>> {
-    // Fetch committees with body-type filter to get only committees
-    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies?body-type=Committee&format=json&limit=50`);
+    // Fetch committees using the correct parameter format
+    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies?body-classification=COMMITTEE&limit=50`);
     return await response.json();
   }
 
   async fetchEvents(startDate?: string, endDate?: string): Promise<EUAPIResponse<EUEventData>> {
     let url = `${this.baseUrl}/events`;
     
-    const params: string[] = [];
+    // Use a smaller date range to avoid timeout
+    const params: string[] = ['limit=100'];
     if (startDate) {
-      params.push(`start-date=${startDate}`);
+      params.push(`date-start=${startDate}`);
     }
     if (endDate) {
-      params.push(`end-date=${endDate}`);
+      // Limit to 3 months to avoid timeout
+      const maxDate = new Date(startDate || new Date());
+      maxDate.setMonth(maxDate.getMonth() + 3);
+      const limitedEndDate = endDate && new Date(endDate) < maxDate ? endDate : maxDate.toISOString().split('T')[0];
+      params.push(`date-end=${limitedEndDate}`);
     }
     
     if (params.length > 0) {
@@ -187,33 +192,33 @@ export class EUParliamentAPI {
 
   // Transform EU API data to our internal format
   transformMEPData(euMep: any) {
-    // The real API uses different field names
-    const id = this.extractId(euMep['id'] || euMep['@id'] || '');
+    // Transform based on official EU Parliament API v2 structure
+    const id = this.extractId(euMep.id || '');
     
     return {
       id,
-      firstName: euMep['givenName'] || euMep['foaf:firstName'] || '',
-      lastName: euMep['familyName'] || euMep['foaf:familyName'] || '',
-      fullName: euMep['label'] || euMep['foaf:name'] || `${euMep['givenName'] || ''} ${euMep['familyName'] || ''}`.trim(),
-      country: euMep['api:country-of-representation'] || '',
-      politicalGroup: euMep['api:political-group'] || '',
-      politicalGroupAbbr: euMep['api:political-group'] || '',
-      nationalPoliticalGroup: '', // Not directly available in EU API
-      photoUrl: null, // Would need additional API call to get photo
-      email: null, // Would need additional API call to get contact details
-      twitter: null, // Not available in EU API
-      facebook: null, // Not available in EU API  
-      website: null, // Not available in EU API
-      birthDate: null, // Would need additional API call
-      birthPlace: null, // Would need additional API call
-      isActive: true, // Assuming active if returned by show-current
+      firstName: euMep.givenName || '',
+      lastName: euMep.familyName || '',
+      fullName: euMep.label || `${euMep.givenName || ''} ${euMep.familyName || ''}`.trim(),
+      country: euMep['country-of-representation'] || '',
+      politicalGroup: euMep['political-group'] || '',
+      politicalGroupAbbr: euMep['political-group'] || '',
+      nationalPoliticalGroup: euMep['national-political-group'] || '',
+      photoUrl: null, // Available through detailed MEP endpoint
+      email: null, // Available through detailed MEP endpoint
+      twitter: null, // Not provided in basic API
+      facebook: null, // Not provided in basic API  
+      website: null, // Not provided in basic API
+      birthDate: null, // Available through detailed MEP endpoint
+      birthPlace: null, // Available through detailed MEP endpoint
+      isActive: true, // Active if returned by show-current
     };
   }
 
   transformCommitteeData(euBody: any) {
-    const id = this.extractId(euBody['id'] || euBody['@id'] || '');
-    const name = euBody['label'] || this.extractText(euBody['skos:prefLabel']) || '';
-    const code = euBody['identifier'] || euBody['skos:notation'] || id;
+    const id = this.extractId(euBody.id || '');
+    const name = euBody.label || '';
+    const code = euBody.identifier || id;
     
     if (!name) return null;
     
