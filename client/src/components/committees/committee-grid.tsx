@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Bus } from "lucide-react";
+import { Users, Bus, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import type { Committee, PaginatedResponse } from "@/lib/types";
 
@@ -73,8 +73,8 @@ export function CommitteeGrid({ data, isLoading, compact = false }: CommitteeGri
               </div>
 
               <div className="flex gap-2">
-                <Link href={`/committees/${committee.id}`} className="flex-1">
-                  <Button variant="secondary" size="sm" className="w-full">
+                <Link href={`/committees/${committee.id}`}>
+                  <Button variant="outline" size="sm" className="flex-1">
                     View Details
                   </Button>
                 </Link>
@@ -84,10 +84,9 @@ export function CommitteeGrid({ data, isLoading, compact = false }: CommitteeGri
                     target="_blank"
                     rel="noopener noreferrer"
                     title="View on EU Parliament official website"
-                    className="flex-1"
                   >
-                    <Button variant="ghost" size="sm" className="w-full text-xs">
-                      Official ↗
+                    <Button variant="ghost" size="sm">
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                   </a>
                 )}

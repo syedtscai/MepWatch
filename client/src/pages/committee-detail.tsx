@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Users, Bus, Calendar, MapPin, Clock, FileText, Video } from "lucide-react";
+import { ArrowLeft, Users, Bus, Calendar, MapPin, Clock, FileText, Video, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
@@ -234,6 +234,14 @@ export default function CommitteeDetail() {
                             <a href={event.liveStreamUrl} target="_blank" rel="noopener noreferrer">
                               <Video className="w-4 h-4 mr-1" />
                               Live Stream
+                            </a>
+                          </Button>
+                        )}
+                        {event.officialUrl && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Official Page
                             </a>
                           </Button>
                         )}
