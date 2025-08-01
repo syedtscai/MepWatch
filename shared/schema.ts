@@ -19,6 +19,7 @@ export const meps = pgTable("meps", {
   website: text("website"),
   birthDate: text("birth_date"),
   birthPlace: text("birth_place"),
+  termStartDate: text("term_start_date"),
   officialUrl: text("official_url"), // EU Parliament profile URL
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),

@@ -94,7 +94,7 @@ export function MEPTable({ data, isLoading, onPageChange }: MEPTableProps) {
                       <div>
                         <div className="font-medium text-gray-900">{mep.fullName}</div>
                         <div className="text-sm text-slate-gray">
-                          MEP since {new Date(mep.createdAt).getFullYear()}
+                          MEP since {mep.termStartDate ? new Date(mep.termStartDate).getFullYear() : '2019'}
                         </div>
                       </div>
                     </div>
