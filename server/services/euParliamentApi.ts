@@ -132,7 +132,7 @@ export class EUParliamentAPI {
     return obj[defaultLang] || obj['en'] || Object.values(obj)[0] || '';
   }
 
-  private extractId(uri: string): string {
+  extractId(uri: string): string {
     if (!uri) return '';
     if (typeof uri !== 'string') return String(uri);
     return uri.split('/').pop() || uri;
@@ -151,6 +151,18 @@ export class EUParliamentAPI {
 
   async fetchCorporateBodies(): Promise<EUAPIResponse<EUCorporateBodyData>> {
     const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies/show-current`);
+    return await response.json();
+  }
+
+  async fetchCommitteeDetails(committeeId: string): Promise<EUCorporateBodyData> {
+    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies/${committeeId}`);
+    const data: EUAPIResponse<EUCorporateBodyData> = await response.json();
+    return data['@graph'][0];
+  }
+
+  async fetchCommitteesWithMembers(): Promise<EUAPIResponse<EUCorporateBodyData>> {
+    // Fetch committees with body-type filter to get only committees
+    const response = await this.rateLimitedFetch(`${this.baseUrl}/corporate-bodies?body-type=Committee&format=json&limit=50`);
     return await response.json();
   }
 

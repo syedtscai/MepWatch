@@ -21,12 +21,12 @@ export class DataSyncService {
       // Sync Events
       const eventResults = await this.syncEvents();
       
-      // Create sample MEP-Committee relationships since the EU API doesn't provide direct membership data
-      await this.createSampleMEPCommitteeRelationships();
+      // Sync authentic committee memberships from EU Parliament API
+      const membershipResults = await this.syncCommitteeMemberships();
       
-      const totalRecordsCreated = mepResults.created + committeeResults.created + eventResults.created;
-      const totalRecordsUpdated = mepResults.updated + committeeResults.updated + eventResults.updated;
-      const allErrors = [...mepResults.errors, ...committeeResults.errors, ...eventResults.errors];
+      const totalRecordsCreated = mepResults.created + committeeResults.created + eventResults.created + membershipResults.created;
+      const totalRecordsUpdated = mepResults.updated + committeeResults.updated + eventResults.updated + membershipResults.updated;
+      const allErrors = [...mepResults.errors, ...committeeResults.errors, ...eventResults.errors, ...membershipResults.errors];
       
       await storage.updateDataUpdate(updateRecord.id, {
         status: 'completed',
@@ -279,57 +279,140 @@ export class DataSyncService {
     return fieldsToCheck.some(field => existing[field] !== updated[field]);
   }
 
-  async createSampleMEPCommitteeRelationships(): Promise<void> {
-    console.log('Creating MEP-committee relationships...');
+  async syncCommitteeMemberships(): Promise<{ created: number; updated: number; errors: string[] }> {
+    console.log('Syncing committee memberships from EU Parliament API...');
+    
+    let created = 0;
+    let updated = 0;
+    const errors: string[] = [];
     
     try {
-      // Get all MEPs and committees from storage
-      const allMEPs = await storage.getAllMEPs();
-      const allCommittees = await storage.getAllCommittees();
+      // Get committees with members from EU Parliament API
+      const committeeResponse = await this.euApi.fetchCommitteesWithMembers();
+      const committeesBodies = committeeResponse['@graph'] || [];
       
-      // Filter to only actual parliamentary committees
-      const parliamentaryCommittees = allCommittees.filter(committee => 
-        ['AGRI', 'BUDG', 'CONT', 'CULT', 'DEVE', 'DROI', 'ECON', 'EMPL', 'ENVI', 'FEMM', 'ITRE', 'IMCO', 'JURI', 'LIBE', 'PECH', 'PETI', 'REGI', 'SEDE', 'TRAN', 'AFCO', 'AFET', 'INTA'].includes(committee.code)
-      );
+      console.log(`Found ${committeesBodies.length} corporate bodies`);
       
-      if (parliamentaryCommittees.length === 0) {
-        console.log('No parliamentary committees found, skipping relationship creation');
-        return;
-      }
-      
-      let relationshipsCreated = 0;
-      
-      // Assign MEPs to committees based on their political groups and specialization
-      for (const mep of allMEPs) {
-        // Each MEP typically serves on 1-3 committees
-        const numCommittees = Math.floor(Math.random() * 3) + 1;
-        const assignedCommittees = this.shuffleArray([...parliamentaryCommittees]).slice(0, numCommittees);
-        
-        for (let i = 0; i < assignedCommittees.length; i++) {
-          const committee = assignedCommittees[i];
-          const role = i === 0 ? 'member' : 'substitute'; // First committee as full member, others as substitute
-          
-          try {
-            await storage.createMEPCommittee({
-              mepId: mep.id,
-              committeeId: committee.id,
-              role: role,
-              startDate: new Date('2024-07-01'), // Current parliamentary term
-              endDate: null,
-              isActive: true
-            });
-            relationshipsCreated++;
-          } catch (error) {
-            // Relationship might already exist, continue
+      for (const body of committeesBodies) {
+        try {
+          // Check if this is actually a committee
+          const bodyType = body['ep:bodyType']?.[0]?.['skos:prefLabel']?.['en'] || '';
+          if (!bodyType.toLowerCase().includes('committee')) {
+            continue;
           }
+          
+          const committeeCode = body['skos:notation'] || '';
+          const committeeName = body['skos:prefLabel']?.['en'] || '';
+          
+          // Find matching committee in our database
+          const committee = await storage.getCommitteeByCode(committeeCode);
+          if (!committee) {
+            console.log(`Committee not found in database: ${committeeCode}`);
+            continue;
+          }
+          
+          console.log(`Processing committee: ${committeeCode} - ${committeeName}`);
+          
+          // Process chairperson
+          if (body['ep:chairperson']?.length > 0) {
+            for (const chair of body['ep:chairperson']) {
+              const chairId = this.euApi.extractId(chair['@id'] || '');
+              const chairName = chair['foaf:name'] || '';
+              
+              // Find MEP by ID or name
+              const mep = await this.findMEPByIdOrName(chairId, chairName);
+              if (mep) {
+                try {
+                  await storage.createMEPCommittee({
+                    mepId: mep.id,
+                    committeeId: committee.id,
+                    role: 'chair',
+                    startDate: new Date('2024-07-01'),
+                    endDate: null,
+                    isActive: true
+                  });
+                  created++;
+                  console.log(`Added chair: ${chairName} to ${committeeCode}`);
+                } catch (error) {
+                  // Relationship might already exist
+                }
+              }
+            }
+          }
+          
+          // Process members
+          if (body['ep:hasMember']?.length > 0) {
+            for (const member of body['ep:hasMember']) {
+              const memberId = this.euApi.extractId(member['@id'] || '');
+              const memberName = member['foaf:name'] || '';
+              const roleLabel = member['ep:role']?.[0]?.['skos:prefLabel']?.['en'] || 'member';
+              
+              // Find MEP by ID or name
+              const mep = await this.findMEPByIdOrName(memberId, memberName);
+              if (mep) {
+                const role = this.normalizeRole(roleLabel);
+                try {
+                  await storage.createMEPCommittee({
+                    mepId: mep.id,
+                    committeeId: committee.id,
+                    role: role,
+                    startDate: new Date('2024-07-01'),
+                    endDate: null,
+                    isActive: true
+                  });
+                  created++;
+                } catch (error) {
+                  // Relationship might already exist
+                }
+              }
+            }
+          }
+          
+        } catch (error) {
+          const errorMsg = `Error processing committee ${body['skos:notation']}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          console.error(errorMsg);
+          errors.push(errorMsg);
         }
       }
       
-      console.log(`Created ${relationshipsCreated} MEP-committee relationships`);
+      console.log(`Committee membership sync completed: ${created} created, ${updated} updated`);
       
     } catch (error) {
-      console.error('Error creating MEP-committee relationships:', error);
+      const errorMsg = `Error syncing committee memberships: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      console.error(errorMsg);
+      errors.push(errorMsg);
     }
+    
+    return { created, updated, errors };
+  }
+
+  private async findMEPByIdOrName(id: string, name: string): Promise<any> {
+    // First try to find by ID
+    if (id) {
+      const mep = await storage.getMEP(id);
+      if (mep) return mep;
+    }
+    
+    // If not found by ID, try to find by name
+    if (name) {
+      const { meps } = await storage.getMEPs({ search: name, limit: 10 });
+      for (const mep of meps) {
+        if (mep.fullName.toLowerCase().includes(name.toLowerCase()) ||
+            name.toLowerCase().includes(mep.fullName.toLowerCase())) {
+          return mep;
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  private normalizeRole(roleLabel: string): string {
+    const role = roleLabel.toLowerCase();
+    if (role.includes('chair') || role.includes('president')) return 'chair';
+    if (role.includes('vice') || role.includes('deputy')) return 'vice-chair';
+    if (role.includes('substitute')) return 'substitute';
+    return 'member';
   }
 
   private shuffleArray<T>(array: T[]): T[] {
