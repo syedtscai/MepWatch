@@ -1,13 +1,14 @@
 import { db } from "../db";
 import { Request } from "express";
 import { sql } from "drizzle-orm";
+import { logger } from "../utils/logger";
 
 /**
  * Security and compliance service for production monitoring
  * Handles security audits, rate limiting, dependency scanning, and compliance
  */
 export class SecurityService {
-  private securityMetrics: Map<string, any> = new Map();
+  private securityMetrics: Map<string, unknown> = new Map();
   private rateLimitMap: Map<string, { count: number; lastReset: number }> = new Map();
   private securityAlerts: Array<{
     type: string;
@@ -95,7 +96,7 @@ export class SecurityService {
     issues: string[];
     recommendations: string[];
   }> {
-    console.log("🔍 Performing security audit...");
+    logger.info("Performing security audit...", 'Security');
     const issues: string[] = [];
     const recommendations: string[] = [];
     let score = 100;

@@ -2,7 +2,7 @@
 // API Documentation: https://data.europarl.europa.eu/en/developer-corner/opendata-api
 
 interface EUAPIResponse<T> {
-  '@context': any;
+  '@context': Record<string, unknown>;
   '@graph': T[];
   'hydra:view'?: {
     '@id': string;
@@ -197,9 +197,9 @@ export class EUParliamentAPI {
   }
 
   // Transform EU API data to our internal format
-  transformMEPData(euMep: any) {
+  transformMEPData(euMep: Record<string, unknown>) {
     // Transform based on official EU Parliament API v2 structure
-    const id = this.extractId(euMep.id || '');
+    const id = this.extractId(String(euMep.id || ''));
     
     return {
       id,
@@ -222,10 +222,10 @@ export class EUParliamentAPI {
     };
   }
 
-  transformCommitteeData(euBody: any) {
-    const id = this.extractId(euBody.id || '');
-    const name = euBody.label || '';
-    const code = euBody.identifier || id;
+  transformCommitteeData(euBody: Record<string, unknown>) {
+    const id = this.extractId(String(euBody.id || ''));
+    const name = String(euBody.label || '');
+    const code = String(euBody.identifier || id);
     
     if (!name) return null;
     
@@ -251,20 +251,20 @@ export class EUParliamentAPI {
     
     // Filter to only include actual parliamentary committees
     // Known EU Parliament committees have specific naming patterns
-    const isCommittee = this.isActualCommittee(name, code);
+    const isCommittee = this.isActualCommittee(String(name), String(code));
     
     if (!isCommittee) return null;
 
     return {
       id,
-      code: code,
-      name: name,
+      code: String(code),
+      name: String(name),
       nameNational: null,
       chairpersonName,
       chairpersonId,
       coordinatorName: null, // Would need additional API call
       coordinatorGroup: null, // Would need additional API call
-      officialUrl: `https://www.europarl.europa.eu/committees/en/${code.toLowerCase()}/home`, // Official EU Parliament committee page
+      officialUrl: `https://www.europarl.europa.eu/committees/en/${String(code).toLowerCase()}/home`, // Official EU Parliament committee page
       isActive: true,
     };
   }

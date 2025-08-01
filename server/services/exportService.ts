@@ -2,7 +2,7 @@ import { storage } from '../storage';
 import type { MEPWithCommittees, CommitteeWithMembers } from '@shared/schema';
 
 export class ExportService {
-  async exportMEPsToCSV(filters?: any): Promise<string> {
+  async exportMEPsToCSV(filters?: Record<string, unknown>): Promise<string> {
     const { meps } = await storage.getMEPs({ ...filters, limit: 10000 });
     
     const headers = [
@@ -80,7 +80,7 @@ export class ExportService {
     return csvContent;
   }
   
-  async exportMEPsToJSON(filters?: any): Promise<object> {
+  async exportMEPsToJSON(filters?: Record<string, unknown>): Promise<object> {
     const { meps } = await storage.getMEPs({ ...filters, limit: 10000 });
     
     return {

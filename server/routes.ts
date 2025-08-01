@@ -9,6 +9,7 @@ import { monitoringService } from "./services/monitoring";
 import { dataQualityService } from "./services/dataQuality";
 import { securityService } from "./services/security";
 import { apiCache } from "./utils/cache";
+import { logger } from "./utils/logger";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { apiRateLimit, exportRateLimit, authRateLimit } from "./middleware/rateLimiting";
 import { monitoringRouter } from "./routes/monitoring";
@@ -28,7 +29,7 @@ const searchFiltersSchema = z.object({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize monitoring services
-  console.log("🚀 Initializing production monitoring services...");
+  // Note: Using console.log for startup messages is acceptable as logger may not be ready
   await monitoringService.startPerformanceMonitoring();
   await dataQualityService.startQualityMonitoring();
   await securityService.startSecurityMonitoring();
@@ -46,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      logger.error("Error fetching user", 'Auth', { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -57,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await optimizedStorage.getDashboardStats();
       res.json(stats);
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
+      logger.error("Error fetching dashboard stats", 'API', { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({ error: "Failed to fetch dashboard statistics" });
     }
   });
@@ -69,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const changes = await optimizedStorage.getRecentChanges(limit);
       res.json(changes);
     } catch (error) {
-      console.error("Error fetching recent changes:", error);
+      logger.error("Error fetching recent changes", 'API', { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({ error: "Failed to fetch recent changes" });
     }
   });
@@ -97,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Error fetching MEPs:", error);
+      logger.error("Error fetching MEPs", 'API', { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({ error: "Failed to fetch MEPs" });
     }
   });

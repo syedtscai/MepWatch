@@ -1,5 +1,6 @@
 import { euParliamentAPI } from './euParliamentApi';
 import { storage } from '../storage';
+import { logger } from '../utils/logger';
 import type { InsertMEP, InsertCommittee, InsertMEPCommittee, InsertChangeLog, InsertCommitteeEvent } from '@shared/schema';
 
 /**
@@ -33,7 +34,7 @@ export class DataSyncService {
     });
     
     try {
-      console.log('Starting full data synchronization with EU Parliament API v2...');
+      logger.info('Starting full data synchronization with EU Parliament API v2...', 'DataSync');
       
       // Sync MEPs
       const mepResults = await this.syncMEPs();
@@ -60,11 +61,14 @@ export class DataSyncService {
         errors: allErrors.length > 0 ? allErrors : null
       });
       
-      console.log(`Data synchronization completed successfully!`);
-      console.log(`Created: ${totalRecordsCreated}, Updated: ${totalRecordsUpdated}, Errors: ${allErrors.length}`);
+      logger.info('Data synchronization completed successfully!', 'DataSync', {
+        recordsCreated: totalRecordsCreated,
+        recordsUpdated: totalRecordsUpdated,
+        errorCount: allErrors.length
+      });
       
     } catch (error) {
-      console.error('Error during data synchronization:', error);
+      logger.error('Error during data synchronization', 'DataSync', { error: error instanceof Error ? error.message : String(error) });
       await storage.updateDataUpdate(updateRecord.id, {
         status: 'failed',
         completedAt: new Date(),
@@ -75,7 +79,7 @@ export class DataSyncService {
   }
 
   async syncMEPs(): Promise<{ created: number; updated: number; errors: string[] }> {
-    console.log('Syncing MEPs from EU Parliament API...');
+    logger.info('Syncing MEPs from EU Parliament API...', 'DataSync');
     
     let created = 0;
     let updated = 0;
@@ -86,7 +90,7 @@ export class DataSyncService {
       const mepsResponse = await euParliamentAPI.fetchCurrentMEPs();
       const mepsData = mepsResponse['@graph'] || [];
       
-      console.log(`Found ${mepsData.length} current MEPs`);
+      logger.info('Found MEPs from EU API', 'DataSync', { count: mepsData.length });
       
       for (const mepData of mepsData) {
         try {
