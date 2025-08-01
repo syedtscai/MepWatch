@@ -2,6 +2,29 @@ import { euParliamentAPI } from './euParliamentApi';
 import { storage } from '../storage';
 import type { InsertMEP, InsertCommittee, InsertMEPCommittee, InsertChangeLog, InsertCommitteeEvent } from '@shared/schema';
 
+/**
+ * DataSyncService - Automated synchronization with EU Parliament APIs
+ * 
+ * Handles daily data updates from official European Parliament sources:
+ * - MEP profiles and membership information
+ * - Committee structures and compositions
+ * - Parliamentary events and activities
+ * 
+ * Features:
+ * - Rate-limited API requests (450 per 5 minutes)
+ * - Intelligent data transformation and validation
+ * - Change tracking and audit logging
+ * - Error handling and recovery mechanisms
+ * - Duplicate prevention and data integrity checks
+ * 
+ * Data Sources:
+ * - EU Parliament API v2 (https://data.europarl.europa.eu/api/v2/)
+ * - Official MEP profiles and committee memberships
+ * - Parliamentary event schedules and documentation
+ * 
+ * @author EU MEP Watch Development Team
+ * @since August 2025
+ */
 export class DataSyncService {
   async syncAllData() {
     const updateRecord = await storage.createDataUpdate({

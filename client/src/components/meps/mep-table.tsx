@@ -8,12 +8,41 @@ import { Eye, Download, ChevronLeft, ChevronRight, ExternalLink } from "lucide-r
 import { Link } from "wouter";
 import type { MEP, PaginatedResponse } from "@/lib/types";
 
+/**
+ * MEPTable Component Props
+ * 
+ * @interface MEPTableProps
+ * @property {PaginatedResponse<MEP>} data - Paginated MEP data with committee information
+ * @property {boolean} [isLoading] - Loading state for skeleton display
+ * @property {function} [onPageChange] - Callback for pagination navigation
+ */
 interface MEPTableProps {
   data: PaginatedResponse<MEP>;
   isLoading?: boolean;
   onPageChange?: (page: number) => void;
 }
 
+/**
+ * MEPTable - Comprehensive table component for displaying EU Parliament Members
+ * 
+ * Features:
+ * - Responsive design with avatar, name, country, political group, and committees
+ * - Clickable member names for profile navigation
+ * - External links to official EU Parliament profiles
+ * - Political group badges with color coding
+ * - Committee membership display with overflow handling
+ * - Pagination controls with accessibility features
+ * - Loading skeleton states
+ * 
+ * UI/UX Improvements (August 2025):
+ * - Replaced Eye icons with clickable member names for cleaner interface
+ * - Added ExternalLink icons for better external navigation clarity
+ * - Implemented hover effects and color-coded political group badges
+ * - Optimized for both desktop and mobile viewing
+ * 
+ * @param {MEPTableProps} props - Component properties
+ * @returns {JSX.Element} Rendered MEP table component
+ */
 export function MEPTable({ data, isLoading, onPageChange }: MEPTableProps) {
   if (isLoading) {
     return (

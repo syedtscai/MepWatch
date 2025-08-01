@@ -1,3 +1,21 @@
+/**
+ * TypeScript Type Definitions for EU MEP Watch Application
+ * 
+ * This file contains all TypeScript interfaces and types used throughout
+ * the frontend application for type safety and developer experience.
+ * 
+ * @author EU MEP Watch Development Team
+ * @since August 2025
+ */
+
+/**
+ * MEP (Member of European Parliament) interface
+ * 
+ * Represents a complete MEP profile with all associated data including
+ * personal information, political affiliations, and committee memberships.
+ * 
+ * @interface MEP
+ */
 export interface MEP {
   id: string;
   firstName: string;
@@ -27,6 +45,14 @@ export interface MEP {
   }>;
 }
 
+/**
+ * Committee interface
+ * 
+ * Represents a parliamentary committee with its structure, leadership,
+ * and member composition.
+ * 
+ * @interface Committee
+ */
 export interface Committee {
   id: string;
   code: string;
