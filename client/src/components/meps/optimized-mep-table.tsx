@@ -82,46 +82,62 @@ const MEPTableRow = ({ mep, onProfileClick }: {
         )}
       </TableCell>
       <TableCell>
-        <TooltipProvider>
-          <div className="flex flex-wrap gap-1 max-w-48">
-            {mep.committees.slice(0, 2).map((committee) => (
-              <Tooltip key={committee.committee.id}>
+        <div className="flex flex-wrap gap-1 max-w-48">
+          {mep.committees.slice(0, 2).map((committee) => (
+            <TooltipProvider key={committee.committee.id}>
+              <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="secondary"
-                    className="text-xs cursor-help"
+                    className="text-xs cursor-help hover:bg-secondary/80 transition-colors"
+                    title={`${committee.committee.name} - Role: ${committee.role}`}
                   >
                     {committee.committee.code}
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-medium">{committee.committee.name}</p>
-                  <p className="text-xs text-muted-foreground">Role: {committee.role}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-            {mep.committees.length > 2 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs cursor-help">
-                    +{mep.committees.length - 2}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm">
-                  <p className="font-medium mb-2">All Committee Memberships:</p>
-                  <div className="space-y-1">
-                    {mep.committees.map((committee) => (
-                      <div key={committee.committee.id} className="flex justify-between text-xs">
-                        <span className="font-medium">{committee.committee.code}</span>
-                        <span className="text-muted-foreground ml-2">{committee.role}</span>
-                      </div>
-                    ))}
+                <TooltipContent side="top" className="max-w-xs">
+                  <div className="text-sm">
+                    <p className="font-medium">{committee.committee.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Role: {committee.role}</p>
                   </div>
                 </TooltipContent>
               </Tooltip>
-            )}
-          </div>
-        </TooltipProvider>
+            </TooltipProvider>
+          ))}
+          {mep.committees.length > 2 && (
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs cursor-help hover:bg-muted/50 transition-colors"
+                    title={`Show all ${mep.committees.length} committees`}
+                  >
+                    +{mep.committees.length - 2}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-sm p-3">
+                  <div className="text-sm">
+                    <p className="font-medium mb-2">All Committee Memberships ({mep.committees.length}):</p>
+                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                      {mep.committees.map((committee) => (
+                        <div key={committee.committee.id} className="flex justify-between items-start text-xs border-b border-border/30 pb-1 last:border-b-0">
+                          <div className="flex-1 mr-2">
+                            <div className="font-medium">{committee.committee.code}</div>
+                            <div className="text-muted-foreground text-xs truncate">{committee.committee.name}</div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-muted-foreground">{committee.role}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center space-x-2">
