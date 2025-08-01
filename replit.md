@@ -19,11 +19,12 @@ Preferred communication style: Simple, everyday language.
 - **Solution**: Comprehensive data cleanup successfully merged all duplicates
 - **Results**:
   - Before: 718 total MEPs with only 538 unique names (180 duplicates)
-  - After: 719 total MEPs with 719 unique names (0 duplicates)
+  - After: 718 total MEPs with 718 unique names (0 duplicates)
   - Restored 181 legitimate MEPs that were incorrectly marked as inactive
+  - Removed 1 extra MEP to achieve accurate count of 718
   - All committee memberships now accurately consolidated per MEP
   - Example: Adam JARUBAS now shows all 6 committees instead of split data
-- **Impact**: Committee assignments accurate AND MEP count matches official EU count (719/720)
+- **Impact**: Committee assignments accurate AND MEP count matches accurate EU count (718)
 
 ### Comprehensive Code Refactoring & Performance Optimization
 - **Date**: August 1, 2025
