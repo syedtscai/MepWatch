@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Download, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import type { MEP, PaginatedResponse } from "@/lib/types";
 
@@ -138,7 +138,7 @@ export function MEPTable({ data, isLoading, onPageChange }: MEPTableProps) {
                           title="View on EU Parliament official website"
                         >
                           <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
+                            <ExternalLink className="h-4 w-4" />
                           </Button>
                         </a>
                       )}
