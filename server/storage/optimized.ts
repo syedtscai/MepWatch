@@ -151,7 +151,7 @@ export class OptimizedStorage implements IStorage {
     const [mep] = await db.select().from(meps).where(eq(meps.id, id));
     if (!mep) return undefined;
 
-    const committees = await db
+    const mepCommitteeData = await db
       .select()
       .from(mepCommittees)
       .innerJoin(committees, eq(mepCommittees.committeeId, committees.id))
@@ -159,7 +159,7 @@ export class OptimizedStorage implements IStorage {
 
     const result: MEPWithCommittees = {
       ...mep,
-      committees: committees.map(row => ({
+      committees: mepCommitteeData.map(row => ({
         ...row.mep_committees,
         committee: row.committees
       }))
