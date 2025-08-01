@@ -412,10 +412,12 @@ export class OptimizedStorage implements IStorage {
   }
 
   async getLatestDataUpdate() {
+    // Get the latest completed update, not just the latest started one
     const [latest] = await db
       .select()
       .from(dataUpdates)
-      .orderBy(desc(dataUpdates.startedAt))
+      .where(eq(dataUpdates.status, 'completed'))
+      .orderBy(desc(dataUpdates.completedAt))
       .limit(1);
     return latest || undefined;
   }
