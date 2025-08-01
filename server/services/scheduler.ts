@@ -42,7 +42,8 @@ export class SchedulerService {
       console.log('🔄 Starting scheduled EU Parliament data synchronization...');
       
       try {
-        await dataSyncService.syncAllData();
+        const { accurateDataSync } = await import('./accurateDataSync');
+        await accurateDataSync.syncAccurateData();
         console.log('✅ Scheduled data synchronization completed successfully');
       } catch (error) {
         console.error('❌ Scheduled data synchronization failed:', error);
@@ -58,7 +59,8 @@ export class SchedulerService {
         setTimeout(async () => {
           console.log('🔄 Retrying failed synchronization...');
           try {
-            await dataSyncService.syncAllData();
+            const { accurateDataSync } = await import('./accurateDataSync');
+            await accurateDataSync.syncAccurateData();
             console.log('✅ Retry synchronization completed successfully');
           } catch (retryError) {
             console.error('❌ Retry synchronization also failed:', retryError);
@@ -103,7 +105,8 @@ export class SchedulerService {
     console.log('🔄 Manually triggered data synchronization...');
     
     try {
-      await dataSyncService.syncAllData();
+      const { accurateDataSync } = await import('./accurateDataSync');
+      await accurateDataSync.syncAccurateData();
       console.log('✅ Manual data synchronization completed successfully');
       return { success: true, message: 'Data synchronization completed successfully' };
     } catch (error) {
