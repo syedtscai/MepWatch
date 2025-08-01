@@ -47,7 +47,7 @@ export default function Home() {
             Welcome to EU MEP Watch
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            {user?.email ? `Welcome back, ${user.email}` : 'Welcome to your professional EU Parliament intelligence platform'}
+            {(user as any)?.email ? `Welcome back, ${(user as any).email}` : 'Welcome to your professional EU Parliament intelligence platform'}
           </p>
           <div className="mt-8 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 max-w-md mx-auto">
             <p className="text-green-800 dark:text-green-300 font-medium">
