@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, ArrowRightLeft } from "lucide-react";
+import { Link } from "wouter";
 import type { ChangeLog } from "@/lib/types";
 
 interface RecentChangesProps {
@@ -105,8 +106,10 @@ export function RecentChanges({ changes, isLoading }: RecentChangesProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Recent Changes</CardTitle>
-          <Button variant="ghost" size="sm">
-            View All Changes
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/changes">
+              View All Changes
+            </Link>
           </Button>
         </div>
       </CardHeader>

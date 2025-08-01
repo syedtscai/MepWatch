@@ -11,6 +11,7 @@ import MEPProfile from "@/pages/mep-profile";
 import Committees from "@/pages/committees";
 import CommitteeDetail from "@/pages/committee-detail";
 import Admin from "@/pages/admin";
+import Changes from "@/pages/changes";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/committees" component={Committees} />
       <Route path="/committees/:id" component={CommitteeDetail} />
       <Route path="/admin" component={Admin} />
+      <Route path="/changes" component={Changes} />
       <Route component={NotFound} />
     </Switch>
   );
