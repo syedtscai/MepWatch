@@ -217,6 +217,7 @@ export class EUParliamentAPI {
       website: null, // Not provided in basic API
       birthDate: null, // Available through detailed MEP endpoint
       birthPlace: null, // Available through detailed MEP endpoint
+      officialUrl: `https://www.europarl.europa.eu/meps/en/${id}`, // Official EU Parliament MEP profile
       isActive: true, // Active if returned by show-current
     };
   }
@@ -263,6 +264,7 @@ export class EUParliamentAPI {
       chairpersonId,
       coordinatorName: null, // Would need additional API call
       coordinatorGroup: null, // Would need additional API call
+      officialUrl: `https://www.europarl.europa.eu/committees/en/${code.toLowerCase()}/home`, // Official EU Parliament committee page
       isActive: true,
     };
   }
@@ -308,6 +310,7 @@ export class EUParliamentAPI {
       agenda: null, // Not directly available
       documentsUrl: null, // Not directly available
       liveStreamUrl: null, // Not directly available
+      officialUrl: `https://www.europarl.europa.eu/doceo/document/TA-9-${new Date().getFullYear()}-${id}_EN.html`, // Official EU Parliament event/document URL
       isPublic: euEvent['ep:isPublic'] !== false, // Default to public
     };
   }

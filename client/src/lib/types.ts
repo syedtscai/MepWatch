@@ -14,6 +14,7 @@ export interface MEP {
   website?: string;
   birthDate?: string;
   birthPlace?: string;
+  officialUrl?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +33,7 @@ export interface Committee {
   nameNational?: string;
   coordinatorName?: string;
   coordinatorGroup?: string;
+  officialUrl?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

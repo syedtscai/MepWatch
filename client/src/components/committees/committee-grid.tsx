@@ -72,11 +72,26 @@ export function CommitteeGrid({ data, isLoading, compact = false }: CommitteeGri
                 </div>
               </div>
 
-              <Link href={`/committees/${committee.id}`}>
-                <Button variant="secondary" size="sm" className="w-full">
-                  View Committee Details
-                </Button>
-              </Link>
+              <div className="flex gap-2">
+                <Link href={`/committees/${committee.id}`} className="flex-1">
+                  <Button variant="secondary" size="sm" className="w-full">
+                    View Details
+                  </Button>
+                </Link>
+                {committee.officialUrl && (
+                  <a
+                    href={committee.officialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View on EU Parliament official website"
+                    className="flex-1"
+                  >
+                    <Button variant="ghost" size="sm" className="w-full text-xs">
+                      Official ↗
+                    </Button>
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -19,6 +19,7 @@ export const meps = pgTable("meps", {
   website: text("website"),
   birthDate: text("birth_date"),
   birthPlace: text("birth_place"),
+  officialUrl: text("official_url"), // EU Parliament profile URL
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -33,6 +34,7 @@ export const committees = pgTable("committees", {
   chairpersonId: varchar("chairperson_id"),
   coordinatorName: text("coordinator_name"),
   coordinatorGroup: text("coordinator_group"),
+  officialUrl: text("official_url"), // EU Parliament committee URL
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -82,6 +84,7 @@ export const committeeEvents = pgTable("committee_events", {
   agenda: text("agenda"),
   documentsUrl: text("documents_url"),
   liveStreamUrl: text("live_stream_url"),
+  officialUrl: text("official_url"), // EU Parliament event URL
   isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),

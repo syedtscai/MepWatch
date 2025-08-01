@@ -126,13 +126,22 @@ export function MEPTable({ data, isLoading, onPageChange }: MEPTableProps) {
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Link href={`/meps/${mep.id}`}>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" title="View profile">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      {mep.officialUrl && (
+                        <a
+                          href={mep.officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View on EU Parliament official website"
+                        >
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

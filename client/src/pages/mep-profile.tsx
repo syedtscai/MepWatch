@@ -163,6 +163,17 @@ export default function MEPProfile() {
                       Facebook
                     </a>
                   )}
+                  {mep.officialUrl && (
+                    <a
+                      href={mep.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      <Globe className="w-4 h-4 mr-1" />
+                      Official EU Parliament Profile ↗
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

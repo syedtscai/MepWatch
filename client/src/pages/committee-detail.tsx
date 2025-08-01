@@ -128,6 +128,21 @@ export default function CommitteeDetail() {
                   <p className="text-slate-gray">{committee.members?.length || 0} MEPs</p>
                 </div>
               </div>
+              
+              {committee.officialUrl && (
+                <div className="flex items-center space-x-3">
+                  <div>
+                    <a
+                      href={committee.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Official EU Parliament Page ↗
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
