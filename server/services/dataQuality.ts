@@ -1,6 +1,8 @@
 import { db } from "../db";
 import { OptimizedStorage } from "../storage/optimized";
 import { dataSyncService } from "./dataSync";
+import { sql, count } from "drizzle-orm";
+import { meps, committees } from "@shared/schema";
 
 /**
  * Data quality assurance service for validating EU Parliament data integrity
@@ -128,7 +130,7 @@ export class DataQualityService {
 
     try {
       // Check MEP data completeness
-      const mepCompletenessQuery = await db.execute(`
+      const mepCompletenessQuery = await db.execute(sql`
         SELECT 
           COUNT(*) as total_meps,
           COUNT(first_name) as has_first_name,
@@ -157,7 +159,7 @@ export class DataQualityService {
       });
 
       // Check committee data completeness
-      const committeeCompletenessQuery = await db.execute(`
+      const committeeCompletenessQuery = await db.execute(sql`
         SELECT 
           COUNT(*) as total_committees,
           COUNT(name) as has_name,

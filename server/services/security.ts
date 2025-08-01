@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { Request } from "express";
+import { sql } from "drizzle-orm";
 
 /**
  * Security and compliance service for production monitoring
@@ -167,14 +168,14 @@ export class SecurityService {
 
     try {
       // Check if database connections are encrypted
-      const connectionCheck = await db.execute(`
+      const connectionCheck = await db.execute(sql`
         SELECT setting 
         FROM pg_settings 
         WHERE name = 'ssl'
       `);
 
       // Check for proper user permissions
-      const userPermissionsCheck = await db.execute(`
+      const userPermissionsCheck = await db.execute(sql`
         SELECT 
           usename,
           usesuper,
@@ -208,7 +209,7 @@ export class SecurityService {
 
     try {
       // Check for old sessions
-      const oldSessionsQuery = await db.execute(`
+      const oldSessionsQuery = await db.execute(sql`
         SELECT COUNT(*) as old_sessions
         FROM sessions 
         WHERE expire < NOW() - INTERVAL '7 days'
@@ -335,7 +336,7 @@ export class SecurityService {
 
     try {
       // Check data retention policies
-      const oldDataQuery = await db.execute(`
+      const oldDataQuery = await db.execute(sql`
         SELECT 
           COUNT(*) as old_sessions
         FROM sessions 
@@ -348,7 +349,7 @@ export class SecurityService {
       }
 
       // Check user data handling
-      const userDataQuery = await db.execute(`
+      const userDataQuery = await db.execute(sql`
         SELECT 
           COUNT(*) as users_with_email,
           COUNT(*) as total_users
@@ -356,10 +357,10 @@ export class SecurityService {
       `);
 
       // Check audit logging
-      const auditLogQuery = await db.execute(`
+      const auditLogQuery = await db.execute(sql`
         SELECT COUNT(*) as audit_entries
         FROM data_updates 
-        WHERE timestamp > NOW() - INTERVAL '90 days'
+        WHERE started_at > NOW() - INTERVAL '90 days'
       `);
 
       // Verify data minimization principles

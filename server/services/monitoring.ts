@@ -3,6 +3,7 @@ import { dataSyncService } from "./dataSync";
 import { apiCache } from "../utils/cache";
 import { OptimizedStorage } from "../storage/optimized";
 import { performance } from "perf_hooks";
+import { sql } from "drizzle-orm";
 
 /**
  * Production monitoring service for performance, database, cache, and API health
@@ -98,7 +99,7 @@ export class MonitoringService {
       const startTime = performance.now();
       
       // Test complex query performance
-      const result = await db.execute(`
+      const result = await db.execute(sql`
         SELECT 
           COUNT(*) as total_meps,
           COUNT(DISTINCT country) as countries,
@@ -114,7 +115,7 @@ export class MonitoringService {
       }
 
       // Check database connections
-      const connectionResult = await db.execute('SELECT 1 as health_check');
+      const connectionResult = await db.execute(sql`SELECT 1 as health_check`);
       this.metrics.set('db_health', connectionResult ? 'healthy' : 'unhealthy');
 
     } catch (error) {
