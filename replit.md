@@ -12,6 +12,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Major Updates (August 2025)
 
+### Security Vulnerability Fix - HTTP to HTTPS
+- **Date**: August 1, 2025 (latest)
+- **Status**: Completed ✓
+- **Problem**: Unencrypted HTTP request vulnerability in EU Parliament data synchronization
+- **Location**: `server/services/accurateDataSync.ts` line 279
+- **Solution**: Changed HTTP to HTTPS for secure encrypted communication
+- **Security Impact**: 
+  - Eliminated man-in-the-middle attack vector
+  - Protected EU Parliament data integrity during transit
+  - Ensured compliance with security best practices
+- **Change**: Updated XML feed URL from `http://` to `https://www.europarl.europa.eu/meps/en/full-list/xml`
+
 ### CRITICAL Data Integrity Fix - Committee Assignments
 - **Date**: August 1, 2025 (latest)
 - **Status**: Completed ✓
